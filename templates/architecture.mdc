@@ -1,0 +1,27 @@
+---
+description: SwiftUI layered architecture — dependency flow and layer boundaries
+alwaysApply: true
+---
+
+# SwiftUI architecture (layered)
+
+Use the **swiftui-architecture** skill when scaffolding features or reviewing structure.
+
+## Dependency flow (unidirectional)
+
+```
+App → Factory → Manager → UseCase → ViewModel → View
+```
+
+## Rules
+
+- ViewModels depend on **use case protocols** only — never managers.
+- Views depend on **view models** only — never use cases or managers.
+- Use **protocol types** in `init` parameters.
+- ViewModels: `@Observable`, `@MainActor`, nested `ViewState` enum.
+
+## New feature
+
+Propose folder tree and protocols first; scaffold files after approval.
+
+Full spec: install `swiftui-architecture` skill from [SwiftUI-Architecture](https://github.com/your-org/SwiftUI-Architecture) or project `.cursor/skills/`.
