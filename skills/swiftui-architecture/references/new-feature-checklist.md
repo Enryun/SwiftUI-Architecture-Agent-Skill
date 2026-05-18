@@ -12,10 +12,14 @@ Use when adding `[Feature]` to an existing SwiftUI app.
 
 ## 2. Factory (if needed)
 
+Add when you need implementation selection **or** feature assembly for `App`. Skip if wiring once in `App` is enough.
+
 - [ ] `[Domain]FactoryProtocol`
 - [ ] `[Domain]Factory` implementation
 - [ ] Optional `Model/` for config/API enum
-- [ ] Availability or config selection logic **only** here
+- [ ] `create…()` methods returning **manager protocols** (availability/config selection **only** here)
+- [ ] Optional `make[Feature]ViewModel()` composing UseCase + ViewModel
+- [ ] No business rules in factory methods
 
 ## 3. Manager (if needed)
 

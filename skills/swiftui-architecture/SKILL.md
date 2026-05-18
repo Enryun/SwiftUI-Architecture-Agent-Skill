@@ -14,12 +14,12 @@ Use this skill for **new SwiftUI apps**, **new features**, and **architecture re
 
 ## Non-negotiable rules
 
-1. **Unidirectional dependencies:** App → Factory → Manager → UseCase → ViewModel → View.
+1. **Unidirectional dependencies:** Runtime flow is View → ViewModel → UseCase → Manager. `App`/Factory wire dependencies at construction (Factory optional when wiring in `App` is enough).
 2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
 3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
 4. **ViewModels never access managers** — only use case protocols.
 5. **Views never access use cases or managers** — only the view model.
-6. **Factories create, they don't decide business outcomes** — no business logic in factories.
+6. **Factories wire, they don't decide business outcomes** — construction and composition only; no business logic.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
 ## Scaffold workflow
@@ -44,7 +44,7 @@ Use this skill for **new SwiftUI apps**, **new features**, and **architecture re
 
 ## New feature checklist (short)
 
-- [ ] Factory — if manager needs config / API availability
+- [ ] Factory — if selecting manager implementations (availability/config) **or** assembling UseCase + ViewModel for `App` (skip if wiring once in `App` is enough)
 - [ ] Manager — `Interface/` + `Implementation/` (+ `Model/` if needed)
 - [ ] UseCase — `[Feature]UseCaseProtocol` + `[Feature]UseCase`
 - [ ] ViewModel — `[Feature]ViewModel` + `ViewState`
@@ -55,7 +55,7 @@ Use this skill for **new SwiftUI apps**, **new features**, and **architecture re
 
 | Layer | Responsibility |
 |-------|----------------|
-| Factory | Create managers; optional feature graph composition |
+| Factory | Dependency construction & composition: build managers (incl. availability/config when needed); may expose `make[Feature]ViewModel()` so `App` stays thin |
 | Manager Common | Logging, navigation, networking, storage |
 | Manager Feature | App-specific system/integration APIs |
 | UseCase | Business logic; orchestrate manager protocols |

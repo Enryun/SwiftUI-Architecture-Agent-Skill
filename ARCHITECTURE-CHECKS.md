@@ -6,7 +6,7 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 | Layer | May do | Must not do |
 |-------|--------|-------------|
-| **Factory** | Create/configure managers; availability checks; compose graphs for `App` | Business logic |
+| **Factory** | Build manager implementations; availability/config when choosing impls; compose UseCase → ViewModel (or full feature graph) for `App` | Business logic; runtime feature behavior |
 | **Manager (Common)** | Reusable infra: logging, navigation, networking, storage | Feature-specific business rules |
 | **Manager (Feature)** | App-specific system APIs (camera, files, ML, etc.) | UI state; orchestration across features |
 | **UseCase** | Business logic; async orchestration; call manager protocols | Touch SwiftUI; depend on ViewModels |
@@ -17,7 +17,8 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 | Check | Rule |
 |-------|------|
-| Direction | App → Factory → Manager → UseCase → ViewModel → View only |
+| Construction | `App` / Factory wire Manager, UseCase, ViewModel (Factory optional for simple features) |
+| Runtime direction | View → ViewModel → UseCase → Manager only (no upward deps) |
 | Protocols | Depend on protocol types in initializers, not concrete types |
 | Injection | Pass dependencies through `init`; composition root in `App` / factories |
 | Circles | No upward references between layers |
@@ -41,7 +42,7 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 ## New feature checklist
 
-- [ ] Factory (if manager needs config / API availability)
+- [ ] Factory (if impl selection / availability **or** feature assembly for `App`; else wire in `App`)
 - [ ] Manager protocol + implementation (if new infrastructure)
 - [ ] `[Feature]UseCaseProtocol` + `[Feature]UseCase`
 - [ ] `[Feature]ViewModel` + `ViewState`
