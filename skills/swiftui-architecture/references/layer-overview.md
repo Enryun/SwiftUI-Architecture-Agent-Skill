@@ -2,14 +2,31 @@
 
 ## Factory
 
-**Purpose:** Create and configure managers (availability, configuration, platform variants). Optional composition root for UseCase → ViewModel graphs.
+**Purpose:** **Dependency construction and composition** at the edge of the app — not a runtime layer on every call.
+
+Factories handle two related jobs:
+
+1. **Manager construction** — build and return manager **protocol** types; choose implementations using availability, configuration, or platform when needed.
+2. **Feature composition** — optionally assemble UseCase → ViewModel (or a full feature graph) so `App` only holds factories and root views.
 
 **Rules**
 
 - Protocol-first: `[Domain]FactoryProtocol`
-- No business logic — creation and wiring only
+- No business logic — creation and wiring only (no pricing rules, validation policy, etc.)
 - May detect API/OS availability before returning a manager
 - Keep `App` small by delegating construction here
+- Factories **do not replace** Manager/UseCase/ViewModel — they **instantiate** them
+
+**When to add a Factory**
+
+- Multiple implementations of a manager (API variants, OS version, user setting)
+- Non-trivial wiring for a feature (several managers → use case → view model)
+- You want `App` to call `factory.makeItemListViewModel()` instead of inline `init` chains
+
+**When to skip Factory**
+
+- One implementation per protocol; wire once in `App`
+- Small feature with no implementation selection
 
 **Structure**
 
@@ -17,7 +34,16 @@
 Factory/[Domain]/
 ├── Interface/[Domain]FactoryProtocol.swift
 ├── Implementation/[Domain]Factory.swift
-└── Model/                    # optional (e.g. API enum)
+└── Model/                    # optional (e.g. API enum, config)
+```
+
+**Example responsibilities**
+
+```swift
+protocol AuthFactoryProtocol {
+    func createSessionManager() async -> SessionManagerProtocol
+    func makeSignInViewModel() -> SignInViewModel
+}
 ```
 
 ## Manager

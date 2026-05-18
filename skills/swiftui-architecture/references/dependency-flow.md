@@ -2,17 +2,23 @@
 
 ## Diagram
 
+**Construction** (startup / feature entry):
+
 ```
-App (composition root)
-    ↓
-Factory → creates Manager (protocol)
-    ↓
-UseCase → uses Manager protocols
-    ↓
-ViewModel → uses UseCase protocol
-    ↓
-View → uses ViewModel
+App
+  ↓
+Factory (optional) — builds managers; may assemble UseCase + ViewModel
+  ↓
+wired instances: Manager, UseCase, ViewModel
 ```
+
+**Runtime** (per action):
+
+```
+View → ViewModel → UseCase → Manager
+```
+
+Factory is part of **how objects are created**, not a hop in the runtime call chain.
 
 ## Critical rules
 
@@ -40,13 +46,16 @@ struct MyApp: App {
 }
 ```
 
-Factory may expose:
+Factory may expose **manager builders** and **feature assemblers**:
 
 ```swift
-func makeItemListViewModel() async -> ItemListViewModel
+protocol CatalogFactoryProtocol {
+    func createStorage() -> any StorageProtocol<Item>
+    func makeItemListViewModel() -> ItemListViewModel
+}
 ```
 
-so `App` stays thin.
+`makeItemListViewModel()` typically constructs the use case internally, then the view model — so `App` stays thin.
 
 ## Wiring a feature
 

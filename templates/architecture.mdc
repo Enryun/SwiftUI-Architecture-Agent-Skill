@@ -7,11 +7,13 @@ alwaysApply: true
 
 Use the **swiftui-architecture** skill when scaffolding features or reviewing structure.
 
-## Dependency flow (unidirectional)
+## Dependency flow
 
-```
-App → Factory → Manager → UseCase → ViewModel → View
-```
+Construction: `App` / Factory wire Manager, UseCase, ViewModel (Factory optional).
+
+Runtime: `View → ViewModel → UseCase → Manager` (unidirectional).
+
+Factory = build managers (incl. availability/config) + optional `make[Feature]ViewModel()` — not business logic.
 
 ## Rules
 

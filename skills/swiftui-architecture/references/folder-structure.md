@@ -81,7 +81,7 @@ Manager/Common/Storage/
 | Feature screen + VM | `Pages/[Feature]/` |
 | Business logic | `UseCase/[Domain]/[Feature]/` |
 | System API wrapper | `Manager/Common/` or `Manager/Feature/` |
-| Manager creation | `Factory/[Domain]/` |
+| Manager construction & feature assembly | `Factory/[Domain]/` (optional) |
 | Shared button, row style | `Component/` |
 | UserDefaults key strings | `Constants/` |
 | `URL.isRemoteURL` helper | `Utility/` |

@@ -6,4 +6,4 @@ This repository is an **Agent Skills** package for SwiftUI app architecture.
 - Use [`skills/swiftui-architecture/references/`](skills/swiftui-architecture/references/) for layer details, folder structure, and checklists.
 - Human index: [`ARCHITECTURE-CHECKS.md`](ARCHITECTURE-CHECKS.md).
 
-**Dependency flow:** App → Factory → Manager → UseCase → ViewModel → View (unidirectional only).
+**Construction:** App / Factory wire dependencies. **Runtime:** View → ViewModel → UseCase → Manager. Factory = construction & composition (managers + optional feature graphs), not a per-call runtime layer.

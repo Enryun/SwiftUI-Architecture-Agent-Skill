@@ -71,19 +71,33 @@ See [`skills/swiftui-architecture/SKILL.md`](skills/swiftui-architecture/SKILL.m
 
 ## Architecture at a glance
 
+**Construction** (what `App` / Factory wire at startup):
+
 ```
-App (composition root)
+App
   ↓
-Factory — creates managers (availability, config)
+Factory — dependency construction & composition
+         • builds manager implementations (optional availability/config)
+         • may assemble UseCase → ViewModel for a feature
   ↓
-Manager — infrastructure (Common + Feature), protocol-based
-  ↓
-UseCase — business logic, orchestrates managers
-  ↓
-ViewModel — @MainActor @Observable, ViewState enum
-  ↓
-View — presentation only
+Manager / UseCase / ViewModel (wired instances)
 ```
+
+**Runtime** (each user action):
+
+```
+View → ViewModel → UseCase → Manager
+```
+
+| Layer | Role |
+|-------|------|
+| **Factory** | Composition root: create managers; optionally wire feature graphs so `App` stays thin. Not a runtime hop on every call. |
+| **Manager** | Infrastructure (Common + Feature), protocol-based |
+| **UseCase** | Business logic; orchestrates manager protocols |
+| **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum |
+| **View** | Presentation only |
+
+Factory is **optional** when there is a single manager implementation and you wire directly in `App`.
 
 Details: [`ARCHITECTURE-CHECKS.md`](ARCHITECTURE-CHECKS.md) and [`skills/swiftui-architecture/references/`](skills/swiftui-architecture/references/).
 
