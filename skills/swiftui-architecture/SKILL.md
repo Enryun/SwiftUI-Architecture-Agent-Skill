@@ -20,6 +20,8 @@ Use this skill for **new SwiftUI apps**, **new features**, and **architecture re
 
 Use the smallest structure that keeps responsibilities clear.
 
+The preferred default for a feature with business rules is `View → ViewModel → focused UseCase(s)`. When a UseCase crosses an infrastructure boundary—such as persistence, networking, files, StoreKit, analytics, or device APIs—it depends on a narrow Manager protocol. Features without infrastructure do not need a Manager layer. Add a Factory when construction or implementation selection is genuinely complex. Use simple `View → ViewModel` for screens whose behavior is only local presentation state; do not add empty layers to match the default.
+
 | Situation | Recommended |
 |----------|-------------|
 | **Small screen** (simple UI state, no real business rules) | Simple MVVM: View + ViewModel |
@@ -29,9 +31,9 @@ Use the smallest structure that keeps responsibilities clear.
 
 ## Core feature boundary
 
-**One main feature View → exactly one owning ViewModel → one or more focused UseCase protocols.**
+**One main feature View → exactly one owning ViewModel.** When the feature has business operations, that ViewModel may depend on one or more focused UseCase protocols.
 
-The one-ViewModel rule does **not** mean one UseCase. When the same feature needs profile, purchase, or preference operations, inject the relevant focused UseCase protocols into its existing ViewModel. Do not add another ViewModel or merge unrelated UseCases just to serve that feature.
+The one-ViewModel rule does **not** mean one UseCase. When the same feature needs profile, purchase, or preference operations, inject the relevant focused UseCase protocols into its existing ViewModel. Do not add another ViewModel or merge unrelated UseCases just to serve that feature. A simple screen may have no UseCase at all.
 
 Closures support component actions, presentation events, and content composition. Keep callback APIs small and purposeful; do not use closures to conceal forbidden dependencies, move business workflows into Views, or forward actions through layers of otherwise unnecessary containers. See [closure boundaries](references/layer-overview.md#closure-boundaries).
 
@@ -40,9 +42,9 @@ Closures support component actions, presentation events, and content composition
 1. **Unidirectional dependencies:**
    - Runtime flow is `View → ViewModel → UseCase → Manager`.
    - `App` wires dependencies and owns shared lifetimes; factories create individual instances from supplied dependencies.
-2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
-3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
-4. **ViewModels depend on one or more focused UseCase protocols** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
+2. **Protocol-first at boundaries:** Use protocols for replaceable infrastructure and business dependencies. A trivial private implementation does not need a protocol solely to satisfy this guide.
+3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum when mutually exclusive screen modes make it clearer. Independent state such as drafts, selection, sheets, and alerts may remain separate properties.
+4. **ViewModels depend on focused UseCase protocols when business operations require them** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
 5. **Views have explicit roles** — each feature View receives exactly one owning feature ViewModel. Composition views may receive multiple child ViewModels to assemble independent features using instances supplied by `App`. Reusable visual components receive values, bindings, and action closures. Views do not call UseCases, perform business operations, or create business services. Scoped navigation state is a presentation exception: feature/composition Views may access it; ViewModels and UseCases may not. ViewModels expose operation results and UI state, not routes or navigation commands; Views decide how to navigate. See [navigation and lifetimes](references/navigation.md).
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
@@ -58,10 +60,10 @@ Treat domain, presentation, and persistence models as suggested responsibility c
 1. Confirm feature name and domain (e.g. `Catalog` / `ItemList`).
 2. List files to add under:
    - `Pages/`
-   - `Factory/` (factory protocols + implementations)
-   - `Manager/`
-   - `UseCase/`
-   - `Component/`
+   - `Factory/` (only if creation/selection complexity warrants it)
+   - `Manager/` (only if infrastructure is needed)
+   - `UseCase/` (only if business operations need a separate boundary)
+   - `Component/` (only when UI is shared)
    - `Constants/`
    - `Utility/`
 
@@ -69,8 +71,8 @@ Treat domain, presentation, and persistence models as suggested responsibility c
 3. Output:
    - Folder tree
    - Protocol names per layer
-   - Dependency graph (what `App` wires and shares)
-   - `ViewState` cases for the ViewModel
+   - Dependency graph for the layers that actually exist
+   - `ViewState` cases only if an enum improves the feature's state model
 4. **Stop** and ask for approval.
 
 ### Phase 2 — Implement (after approval)
@@ -82,10 +84,10 @@ Treat domain, presentation, and persistence models as suggested responsibility c
 
 ## New feature checklist (short)
 
-- [ ] Factory — reuse existing factories; add individual creation methods for new dependencies and split only at a concrete domain/platform boundary
-- [ ] Manager — `Interface/` + `Implementation/` (+ `Model/` if needed)
-- [ ] UseCases — reuse or add focused protocol/implementation pairs for the required business responsibilities
-- [ ] ViewModel — `[Feature]ViewModel` + `ViewState`
+- [ ] Factory — only if creation/selection complexity warrants it; reuse existing factories
+- [ ] Manager — only if the feature needs infrastructure; use a protocol when replaceability/test seams matter
+- [ ] UseCases — only for focused business operations that need a separate boundary
+- [ ] ViewModel — `[Feature]ViewModel`; add `ViewState` when mutually exclusive modes benefit from it
 - [ ] View — `[Feature]View` receives one owning ViewModel; compose independent features without an aggregate ViewModel
 - [ ] DI wired in `App`; shared manager instances created once and reused
 
@@ -98,16 +100,16 @@ Treat domain, presentation, and persistence models as suggested responsibility c
 | Navigation | Presentation state scoped to a stack/window; Views may access it, ViewModels/UseCases may not |
 | Manager Feature | App-specific system/integration APIs |
 | UseCase | One focused business responsibility; orchestrate manager protocols directly, never other UseCases |
-| ViewModel | UI state, user actions → one or more focused UseCase protocols; no other ViewModels |
+| ViewModel | UI state, user actions → focused UseCase protocols when needed; no other ViewModels |
 | Feature View | Present one feature; forward actions to its one owning ViewModel |
 | Composition View | Assemble independent feature views; own layout and cross-feature presentation, not feature business state |
 | Component | Visual UI driven by values, bindings, and action closures |
 
 ## Testing guidance
 
-- **UseCase tests**: mock Manager protocols; verify business rules and orchestration.
-- **ViewModel tests**: mock the injected UseCase protocols; verify `ViewState` transitions and user-intent handlers.
-- **View tests**: prefer previews and snapshot-style checks; keep Views thin and deterministic.
+- **UseCase tests**: when a UseCase exists, mock its Manager protocols and verify business rules and orchestration.
+- **ViewModel tests**: mock injected UseCase protocols when present; verify state transitions and user-intent handlers.
+- **View tests**: use previews or snapshot-style checks when they provide value; keep Views thin and deterministic.
 
 ## Migration guidance
 

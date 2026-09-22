@@ -4,14 +4,16 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 ## Layer responsibilities
 
+The recommended feature shape is `View → ViewModel → focused UseCase(s)` when business rules exist. When a UseCase crosses an infrastructure boundary, a narrow Manager protocol is required at that boundary. Features without infrastructure do not need a Manager layer; factories are added only when their responsibilities are present. Simple presentation-only screens may use View + ViewModel.
+
 | Layer | May do | Must not do |
 |-------|--------|-------------|
 | **Factory** | Create one Manager, UseCase, or ViewModel per method using supplied dependencies; select implementations | Business logic; hidden feature/application graphs; ownership of shared services |
 | **Manager (Common)** | Reusable infra: logging, networking, storage | Feature-specific business rules |
 | **Navigation (presentation)** | Scoped path state and navigation operations; accessible by Views | Business operations; dependencies from ViewModels/UseCases |
 | **Manager (Feature)** | App-specific system APIs (camera, files, ML, etc.) | UI state; orchestration across features |
-| **UseCase** | Focused business logic; async orchestration; call manager protocols | Touch SwiftUI; depend on ViewModels or other UseCases |
-| **ViewModel** | UI state; `ViewState` enum; call focused UseCase protocols | Depend on or call Managers or other ViewModels |
+| **UseCase** | Focused business logic when a separate boundary is useful; orchestrate manager protocols | Touch SwiftUI; depend on ViewModels or other UseCases |
+| **ViewModel** | UI state; optional `ViewState` enum; call focused UseCase protocols when present | Depend on or call Managers or other ViewModels |
 | **Feature View** | Present one feature; receive one owning ViewModel plus values, bindings, closures | Receive unrelated feature ViewModels; business operations; service creation |
 | **Composition View** | Assemble feature views using child ViewModels from `App`; coordinate presentation | Call UseCases; create business services; duplicate feature business state |
 | **Component** | Render values; use bindings and action closures; own local visual state | Depend on feature ViewModels, UseCases, or Managers |
@@ -44,8 +46,8 @@ Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/refer
 |-------|------|
 | Isolation | `@MainActor` on ViewModels |
 | Observation | `@Observable` (Swift Observation) |
-| State | Nested `ViewState` enum with associated values, not many boolean flags |
-| Dependencies | One or more focused UseCase protocols; no other ViewModels |
+| State | Use a nested `ViewState` enum when mutually exclusive modes benefit from it; independent state may remain separate |
+| Dependencies | One or more focused UseCase protocols when needed; no other ViewModels |
 
 ## View
 
@@ -62,8 +64,8 @@ Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/refer
 
 - [ ] Reuse appropriately scoped factories; each creation method accepts dependencies and creates one object
 - [ ] Manager protocol + implementation (if new infrastructure)
-- [ ] Focused UseCase protocol/implementation pairs; no UseCase → UseCase dependencies
-- [ ] `[Feature]ViewModel` + `ViewState`
+- [ ] Focused UseCase protocol/implementation pairs when business boundaries require them; no UseCase → UseCase dependencies
+- [ ] `[Feature]ViewModel`; add `ViewState` when it clarifies state
 - [ ] `[Feature]View` receives exactly one owning ViewModel
 - [ ] Composition views assemble independent features without an aggregate ViewModel
 - [ ] Model responsibilities considered: domain, presentation, persistence; no mandatory three-type structure or folder migration

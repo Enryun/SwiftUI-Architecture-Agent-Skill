@@ -14,6 +14,8 @@ Protocol-first dependency injection, feature-based folders, and a recommend-firs
 - Adding a feature module (screen + business logic + infrastructure)
 - Reviewing layer boundaries or dependency direction
 
+For features with real business rules, prefer `View → ViewModel → focused UseCase(s)`. When a UseCase crosses an infrastructure boundary, it depends on a narrow Manager protocol; features without infrastructure do not need a Manager layer. Add factories only when construction complexity warrants them. Simple presentation-only screens may remain simple MVVM.
+
 ## When not to use
 
 - Single-screen prototypes or throwaway demos (simple MVVM is enough)
@@ -73,7 +75,7 @@ See [`skills/swiftui-architecture/SKILL.md`](skills/swiftui-architecture/SKILL.m
 
 ## Architecture at a glance
 
-**One main feature View → exactly one owning ViewModel → one or more focused UseCases.** Multiple business responsibilities are served by focused UseCases injected into that ViewModel; they do not require additional ViewModels for the same feature.
+**One main feature View → exactly one owning ViewModel.** When business operations need a separate boundary, that ViewModel may use one or more focused UseCases; a simple feature may use none.
 
 **Construction** (`App` owns composition and shared lifetimes):
 
@@ -95,7 +97,7 @@ View → ViewModel → UseCase → Manager
 | **Factory** | Create one Manager, UseCase, or ViewModel per method from supplied dependencies; select platform implementations when needed. |
 | **Manager** | Infrastructure (Common + Feature), protocol-based |
 | **UseCase** | Focused business responsibility; calls manager protocols directly, never other UseCases |
-| **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum; one or more focused UseCase protocols, no other ViewModels |
+| **ViewModel** | `@MainActor` `@Observable`; optional `ViewState`; focused UseCase protocols when needed, no other ViewModels |
 | **Feature View** | Presents one feature through its one owning ViewModel |
 | **Composition View** | Assembles independent feature views using child ViewModels supplied by `App` |
 | **Component** | Visual UI receiving values, bindings, and action closures |

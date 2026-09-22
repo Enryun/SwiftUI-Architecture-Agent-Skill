@@ -7,11 +7,11 @@ Use when adding `[Feature]` to an existing SwiftUI app.
 - [ ] Feature name and domain (`Catalog` / `ItemDetail`)
 - [ ] View roles: feature, composition, or reusable visual component
 - [ ] Which managers are needed (new vs existing)
-- [ ] Focused UseCases needed (reuse vs new) and each public API (methods, async, streams)
-- [ ] `ViewState` cases
+- [ ] Whether focused UseCases are needed, and each public API if they are
+- [ ] Whether a `ViewState` enum clarifies mutually exclusive modes
 - [ ] Navigation routes (if any)
 
-## 2. Factory
+## 2. Factory (optional)
 
 Reuse an existing factory; add a creation method only when a new dependency must be constructed. Split factories only when current domain/platform boundaries justify it.
 
@@ -21,28 +21,29 @@ Reuse an existing factory; add a creation method only when a new dependency must
 - [ ] Implementation selection (availability/config) stays in the factory
 - [ ] No business rules or hidden feature/application graph construction
 
-## 3. Manager (if needed)
+## 3. Manager (optional)
 
 - [ ] `Manager/Common/...` vs `Manager/Feature/...`
 - [ ] `[Domain]Protocol` in `Interface/`
 - [ ] `[Domain]Manager` in `Implementation/`
 - [ ] Models under `Model/{State,Configuration,Data,Error}/`
 
-## 4. UseCase
+## 4. UseCase (optional)
 
 - [ ] `UseCase/[Domain]/[Feature]/Interface/[Feature]UseCaseProtocol.swift`
 - [ ] `UseCase/[Domain]/[Feature]/Implementation/[Feature]UseCase.swift`
 - [ ] Each UseCase owns one focused business responsibility
 - [ ] Inject manager protocols in `init`; no other UseCase dependencies
-- [ ] `async` APIs; cancellation in long operations
+- [ ] Synchronous APIs remain synchronous; use `async` only when the operation is asynchronous
+- [ ] Cancellation in genuinely long-running operations
 
 ## 5. ViewModel
 
 - [ ] `Pages/[Feature]/ViewModel/[Feature]ViewModel.swift`
 - [ ] `@Observable` + `@MainActor`
-- [ ] Inject one or more focused UseCase protocols; no managers or other ViewModels
-- [ ] `enum ViewState { ... }`
-- [ ] `private(set) var state`
+- [ ] Inject focused UseCase protocols when business operations require them; no managers or other ViewModels
+- [ ] Add `enum ViewState { ... }` when mutually exclusive modes benefit from it
+- [ ] Use `private(set)` for externally read state unless writable bindings are deliberate
 - [ ] Extensions for logical groups (loading, filtering)
 
 ## 6. View

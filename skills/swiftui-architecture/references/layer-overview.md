@@ -70,12 +70,12 @@ Manager/.../[Domain]/
 
 ## UseCase
 
-**Purpose:** Own one focused business responsibility; orchestrate manager protocols directly. A feature may require several UseCases.
+**Purpose:** Own one focused business responsibility when keeping it outside the ViewModel improves clarity, testability, or reuse. When the operation crosses persistence, networking, files, device APIs, StoreKit, analytics, or another infrastructure boundary, the UseCase depends on the narrow Manager protocols for that boundary. A business-only UseCase may have no Manager dependency. A feature may require several UseCases or none.
 
 **Rules**
 
 - `[Feature]UseCaseProtocol` + `[Feature]UseCase`
-- `async/await` for operations
+- Use synchronous APIs for synchronous operations; use `async` only when the operation is asynchronous
 - Inject the narrow manager **protocols** needed in `init`
 - Never depend on or call another UseCase. Keep a business workflow in the UseCase responsible for that operation, using manager protocols directly
 - Respect cancellation in long work
@@ -95,13 +95,13 @@ UseCase/[Domain]/[Feature]/
 
 **Purpose:** UI state and user-intent handling.
 
-**One owning ViewModel per feature View; one or more focused UseCase protocols per ViewModel.** A feature spanning multiple business domains still has one owning ViewModel. Inject the focused UseCases it needs; do not force a single umbrella UseCase or introduce sibling ViewModels for that same feature.
+**One owning ViewModel per feature View; zero or more focused UseCase protocols per ViewModel.** A simple feature may need no UseCase. A feature spanning multiple business domains still has one owning ViewModel. Inject the focused UseCases it needs; do not force a single umbrella UseCase or introduce sibling ViewModels for that same feature.
 
 **Rules**
 
 - `@Observable` + `@MainActor`
-- Nested `enum ViewState` with associated values
-- Depends on one or more focused UseCase protocols; no required primary UseCase
+- Use a nested `enum ViewState` when mutually exclusive screen modes benefit from it
+- Depends on focused UseCase protocols when business operations require them; no required primary UseCase
 - Never depends on managers or other ViewModels
 - Do not merge unrelated business responsibilities into a single UseCase to reduce initializer parameters
 - Filtering, selection, pagination — UI-facing only
