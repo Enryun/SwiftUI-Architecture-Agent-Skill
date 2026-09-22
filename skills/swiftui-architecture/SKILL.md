@@ -47,6 +47,10 @@ Closures support component actions, presentation events, and content composition
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
+## Model ownership
+
+Treat domain, presentation, and persistence models as suggested responsibility categories, not a mandatory three-type structure. Reuse plain domain values across Managers, UseCases, ViewModels, and Views when their meaning matches. Separate persistence/transport/UI representations only when their requirements differ. Keep framework-managed records and contexts inside their owning integration; business-facing APIs expose domain values or identifiers. See [model ownership](references/models.md) for placement and conversion rules.
+
 ## Scaffold workflow
 
 ### Phase 1 — Propose (no file creation)
@@ -143,6 +147,7 @@ Read only what you need:
 
 - [Layer overview](references/layer-overview.md)
 - [Folder structure](references/folder-structure.md)
+- [Model ownership and persistence boundaries](references/models.md)
 - [Dependency flow](references/dependency-flow.md)
 - [Naming conventions](references/naming-conventions.md)
 - [New feature checklist](references/new-feature-checklist.md)

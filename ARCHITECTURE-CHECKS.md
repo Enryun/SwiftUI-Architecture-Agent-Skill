@@ -66,7 +66,8 @@ Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/refer
 - [ ] `[Feature]ViewModel` + `ViewState`
 - [ ] `[Feature]View` receives exactly one owning ViewModel
 - [ ] Composition views assemble independent features without an aggregate ViewModel
-- [ ] Models under feature `Model/` or manager `Model/`
+- [ ] Model responsibilities considered: domain, presentation, persistence; no mandatory three-type structure or folder migration
+- [ ] Reuse values; separate representations only for a concrete boundary requirement
 - [ ] Wire in `App` (composition root); create shared managers once and reuse them
 - [ ] Reusable UI → `Component/` only when shared
 

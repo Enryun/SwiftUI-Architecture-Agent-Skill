@@ -31,6 +31,8 @@ Each factory method creates one Manager, UseCase, or ViewModel and accepts its d
 - Use **protocol types** in `init` parameters.
 - ViewModels: `@Observable`, `@MainActor`, nested `ViewState` enum.
 
+- Model categories and locations are guidance, not a mandatory three-type structure. Reuse plain domain values across layers. Separate storage/transport/UI models only when requirements differ; keep persistence records and contexts inside integrations and expose values or identifiers to business layers.
+
 ## New feature
 
 Propose folder tree and protocols first; scaffold files after approval.

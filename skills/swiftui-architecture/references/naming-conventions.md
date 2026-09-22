@@ -26,9 +26,11 @@
 
 ## Models
 
+Choose the owner before choosing subfolders; see [model ownership](models.md). These optional groupings apply within the owning domain, integration, or UI feature. Do not create each grouping or duplicate each model across layers.
+
 - **State/** — runtime enums (`LoadingState`)
 - **Configuration/** — settings (`RetryPolicy`)
-- **Data/** — DTOs / entities (`Item`)
+- **Data/** — domain values in domain code (`Item`), DTOs in integrations (`ItemResponse`)
 - **Error/** — `LocalizedError` types (`ItemListError`)
 
 ## Constants

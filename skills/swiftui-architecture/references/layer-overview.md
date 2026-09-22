@@ -180,4 +180,4 @@ Pages/[Feature]/
 └── ViewModel/
 ```
 
-Feature-specific models live here unless shared at manager level.
+UI-only models and drafts live here. Plain domain values used by business layers belong in a domain location independent of Pages and persistence implementations. Reuse values rather than adding a representation per layer; see [model ownership](models.md).

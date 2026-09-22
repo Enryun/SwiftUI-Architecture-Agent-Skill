@@ -100,12 +100,16 @@ See [the complete example](examples.md) for factory methods and `App` wiring.
 |-------|----------------|
 | App | Factory protocols, dependency protocols, ViewModel, View (composition and sharing) |
 | Factory | Manager protocols/implementations, UseCase, ViewModel (individual creation only) |
-| Manager | Other manager protocols, Foundation, system frameworks |
+| Manager | Domain values, other manager protocols, Foundation, system frameworks |
 | UseCase | Manager protocols, domain models (never other UseCases) |
 | ViewModel | One or more focused UseCase protocols, feature models (never other ViewModels) |
 | Feature View | Its one owning feature ViewModel, values, bindings, closures, Component, SwiftUI, scoped navigation environment (presentation only) |
 | Composition View | Child feature ViewModels, composed views, scoped navigation/presentation state, SwiftUI |
 | Component | Values, bindings, action closures, local visual state, SwiftUI |
+
+## Model boundaries
+
+Reuse plain domain values across layers. Domain types do not depend on Pages or persistence implementations. Keep persistence records/transport DTOs inside integrations when conversion is needed; see [model ownership](models.md).
 
 ## Lifetimes
 

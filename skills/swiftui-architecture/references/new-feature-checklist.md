@@ -58,8 +58,10 @@ Reuse an existing factory; add a creation method only when a new dependency must
 
 ## 7. Models
 
-- [ ] Feature models in `Pages/[Feature]/Model/`
-- [ ] Shared/persistence models in manager `Model/` if reused
+- [ ] Consider domain, presentation, and persistence responsibilities without requiring separate types; reuse plain values and existing suitable locations
+- [ ] UI-only models/drafts in `Pages/[Feature]/Model/`
+- [ ] Storage records/transport DTOs stay with the owning integration; add conversion only when needed
+- [ ] Business-facing protocols return values/identifiers safe for their isolation boundary
 
 ## 8. Composition
 
