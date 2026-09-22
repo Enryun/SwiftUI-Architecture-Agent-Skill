@@ -5,6 +5,7 @@ Use when adding `[Feature]` to an existing SwiftUI app.
 ## 1. Plan (before files)
 
 - [ ] Feature name and domain (`Catalog` / `ItemDetail`)
+- [ ] View roles: feature, composition, or reusable visual component
 - [ ] Which managers are needed (new vs existing)
 - [ ] Focused UseCases needed (reuse vs new) and each public API (methods, async, streams)
 - [ ] `ViewState` cases
@@ -47,9 +48,13 @@ Reuse an existing factory; add a creation method only when a new dependency must
 ## 6. View
 
 - [ ] `Pages/[Feature]/View/[Feature]View.swift`
-- [ ] `@State private var viewModel` (or injected init)
+- [ ] Exactly one owning feature ViewModel received through injection
 - [ ] `switch viewModel.state` for UI modes
-- [ ] No use case/manager references
+- [ ] No UseCase calls, business operations, or service creation
+- [ ] Independent features assembled by a composition view receiving existing child ViewModels
+- [ ] No aggregate ViewModel that merely holds child ViewModels or copies their state
+- [ ] Visual components receive values, bindings, and action closures
+- [ ] Callbacks express focused UI events or content composition, with no hidden business dependencies or redundant forwarding chains
 
 ## 7. Models
 
@@ -74,3 +79,4 @@ Reuse an existing factory; add a creation method only when a new dependency must
 - [ ] No ViewModel → ViewModel or UseCase → UseCase dependencies
 - [ ] No concrete manager types in ViewModel `init`
 - [ ] No business logic in View
+- [ ] Each feature View receives one owning ViewModel; multiple child ViewModels appear only in composition views

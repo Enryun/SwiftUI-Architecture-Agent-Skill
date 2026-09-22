@@ -10,8 +10,10 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 | **Manager (Common)** | Reusable infra: logging, navigation, networking, storage | Feature-specific business rules |
 | **Manager (Feature)** | App-specific system APIs (camera, files, ML, etc.) | UI state; orchestration across features |
 | **UseCase** | Focused business logic; async orchestration; call manager protocols | Touch SwiftUI; depend on ViewModels or other UseCases |
-| **ViewModel** | UI state; `ViewState` enum; call focused UseCase protocols | Access managers or other ViewModels |
-| **View** | Layout; forward actions to ViewModel | Business logic; UseCase/Manager access |
+| **ViewModel** | UI state; `ViewState` enum; call focused UseCase protocols | Depend on or call Managers or other ViewModels |
+| **Feature View** | Present one feature; receive one owning ViewModel plus values, bindings, closures | Receive unrelated feature ViewModels; business operations; service creation |
+| **Composition View** | Assemble feature views using child ViewModels from `App`; coordinate presentation | Call UseCases; create services; duplicate feature business state |
+| **Component** | Render values; use bindings and action closures; own local visual state | Depend on feature ViewModels, UseCases, or Managers |
 
 ## Dependency flow
 
@@ -25,6 +27,8 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 ## ViewModel
 
+**Exactly one owning ViewModel per feature View does not restrict that ViewModel to one UseCase.** Inject multiple focused UseCase protocols when the feature needs them.
+
 | Check | Rule |
 |-------|------|
 | Isolation | `@MainActor` on ViewModels |
@@ -36,9 +40,12 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 | Check | Rule |
 |-------|------|
-| Dependencies | ViewModel only |
+| Feature dependencies | Exactly one owning feature ViewModel; values, bindings, closures allowed |
+| Composition dependencies | Multiple child ViewModels allowed for independent feature views |
+| Component inputs | Values, bindings, and action closures; no feature ViewModels |
 | Async | `Task { await viewModel.method() }` from UI actions |
-| Logic | No use case or manager calls in `View` |
+| Logic | No UseCase calls, business operations, or service creation in views |
+| Closures | Small, purposeful UI event/content APIs; no hidden forbidden dependencies, duplicated ViewModel actions, or unnecessary forwarding chains |
 
 ## New feature checklist
 
@@ -46,7 +53,8 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 - [ ] Manager protocol + implementation (if new infrastructure)
 - [ ] Focused UseCase protocol/implementation pairs; no UseCase → UseCase dependencies
 - [ ] `[Feature]ViewModel` + `ViewState`
-- [ ] `[Feature]View`
+- [ ] `[Feature]View` receives exactly one owning ViewModel
+- [ ] Composition views assemble independent features without an aggregate ViewModel
 - [ ] Models under feature `Model/` or manager `Model/`
 - [ ] Wire in `App` (composition root); create shared managers once and reuse them
 - [ ] Reusable UI → `Component/` only when shared

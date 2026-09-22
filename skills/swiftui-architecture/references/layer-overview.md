@@ -95,6 +95,8 @@ UseCase/[Domain]/[Feature]/
 
 **Purpose:** UI state and user-intent handling.
 
+**One owning ViewModel per feature View; one or more focused UseCase protocols per ViewModel.** A feature spanning multiple business domains still has one owning ViewModel. Inject the focused UseCases it needs; do not force a single umbrella UseCase or introduce sibling ViewModels for that same feature.
+
 **Rules**
 
 - `@Observable` + `@MainActor`
@@ -107,17 +109,55 @@ UseCase/[Domain]/[Feature]/
 
 ## View
 
-**Purpose:** SwiftUI presentation.
+Choose the role by responsibility, not the type's name or how many screens it displays.
 
-**Rules**
+### Feature View
 
-- Depends on ViewModel only (`@State` for `@Observable` VMs)
-- `Task { await viewModel.action() }` for async
-- Extract subviews as private computed properties or `Component/`
+- Receives exactly one owning feature ViewModel, including destination screens and embedded feature sections.
+- May also receive value models, bindings, and action closures.
+- Presents that feature's state and forwards user actions to its ViewModel.
+- Does not receive another feature's ViewModel, call UseCases, create services, or perform business operations.
+- Extract visual subviews using values, bindings, and closures; a visual subview does not need its own ViewModel merely because it is a separate type.
+
+### Composition View
+
+- Assembles independent feature views using child ViewModels supplied by `App`; may receive multiple child ViewModels.
+- Owns layout, navigation destinations, and cross-feature presentation such as which feature sheet is displayed.
+- Keeps each feature's loading, actions, and business state in that feature's existing ViewModel.
+- Does not construct services, call UseCases, or perform business operations.
+- Do not create an aggregate ViewModel solely to hold child ViewModels or copy their state.
+- Use content closures for intermediate layout-only views; avoid forwarding containers without a concrete responsibility.
+
+When one feature needs business operations from multiple domains, keep one feature ViewModel and inject the focused UseCases it needs. Multiple domains alone do not make a screen a composition view.
+
+See [composition example](dependency-flow.md#composing-independent-features).
 
 ## Component
 
-Reusable UI shared by 2+ features. Group by type: `Button/`, `Loading/`, etc.
+Reusable visual UI receives plain values, bindings, and action closures rather than feature ViewModels, UseCases, or Managers. It may own local visual state; feature loading and business state remain in the owning ViewModel.
+
+Keep feature-only visual helpers beside the feature View. Move UI shared by 2+ features into `Component/`, grouped by type (`Button/`, `Loading/`, etc.).
+
+### Closure boundaries
+
+Use closures where they express a clear UI responsibility:
+
+- **Component action:** `onSave` or `onSelect(id)` forwards an event to the owning feature View, which calls its ViewModel.
+- **Presentation event:** `onClose` or `onShowDetails(id)` lets the parent coordinate presentation.
+- **Content composition:** a `@ViewBuilder` closure supplies content to a layout container without passing feature ViewModels through it.
+
+Avoid overuse:
+
+- Keep callbacks small in number and coherent in purpose. There is no fixed numeric limit; if a View's initializer accumulates unrelated callbacks, reassess its responsibility and feature boundary.
+- Do not replace a feature's owning ViewModel with a bundle of business-operation closures or add callbacks that duplicate its existing action methods.
+- Do not pass callbacks through several containers that only forward them. Prefer direct composition or content closures where intermediate views only arrange layout; do not introduce a global event bus or service locator to avoid forwarding.
+- A closure does not erase a dependency: wrapping a Manager, UseCase, or another ViewModel in a callback does not make an otherwise forbidden dependency acceptable.
+- Keep business decisions and multi-step business workflows in UseCases. UI callbacks forward intent; they do not implement those workflows.
+- Use descriptive event names and the smallest useful payload, such as an identifier or value. Do not pass service objects through callback arguments.
+
+For example, inside `ProfileView`, `SaveButton(onSave: { viewModel.save() })` forwards a component event to the owning ViewModel. Supplying `ProfileView` with a separate `onSave` closure that calls a persistence Manager bypasses that ownership boundary.
+
+Review capture ownership for stored callbacks; use weak captures when needed to break an actual retain cycle, not automatically for every closure.
 
 ## Constants
 

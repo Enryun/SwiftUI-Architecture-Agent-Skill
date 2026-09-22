@@ -73,6 +73,8 @@ See [`skills/swiftui-architecture/SKILL.md`](skills/swiftui-architecture/SKILL.m
 
 ## Architecture at a glance
 
+**One main feature View → exactly one owning ViewModel → one or more focused UseCases.** Multiple business responsibilities are served by focused UseCases injected into that ViewModel; they do not require additional ViewModels for the same feature.
+
 **Construction** (`App` owns composition and shared lifetimes):
 
 ```
@@ -94,7 +96,9 @@ View → ViewModel → UseCase → Manager
 | **Manager** | Infrastructure (Common + Feature), protocol-based |
 | **UseCase** | Focused business responsibility; calls manager protocols directly, never other UseCases |
 | **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum; one or more focused UseCase protocols, no other ViewModels |
-| **View** | Presentation only |
+| **Feature View** | Presents one feature through its one owning ViewModel |
+| **Composition View** | Assembles independent feature views using child ViewModels supplied by `App` |
+| **Component** | Visual UI receiving values, bindings, and action closures |
 
 `AppFactory` above is an example name. Start with one factory and split into focused domain/platform factories when current complexity warrants it. `App` wires the graph and reuses shared manager instances. Factory methods must not hide complete feature/application graphs or contain business logic.
 

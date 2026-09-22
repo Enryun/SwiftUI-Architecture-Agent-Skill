@@ -31,6 +31,8 @@ Factory is part of **how objects are created**, not a hop in the runtime call ch
 
 ## Multiple focused UseCases
 
+**The count restriction applies to the feature View's owning ViewModel, not to the ViewModel's UseCases.** One feature ViewModel may depend on several focused UseCase protocols.
+
 ```text
 ProfileView → ProfileViewModel
                ├─ ProfileUseCaseProtocol → profile storage manager protocol
@@ -38,6 +40,33 @@ ProfileView → ProfileViewModel
 ```
 
 The ViewModel owns presentation state and forwards user intents to the relevant UseCase. It does not borrow another ViewModel or chain business rules together itself. When an operation requires coordinated business steps, its focused UseCase calls the required manager protocols directly.
+
+## Composing independent features
+
+```text
+App supplies existing ViewModels
+  └─ AccountCompositionView
+       ├─ ProfileView(profileViewModel)
+       └─ PurchaseView(purchaseViewModel)
+```
+
+Illustrative presentation-only composition:
+
+```swift
+struct AccountCompositionView: View {
+    let profileViewModel: ProfileViewModel
+    let purchaseViewModel: PurchaseViewModel
+
+    var body: some View {
+        VStack {
+            ProfileView(viewModel: profileViewModel)
+            PurchaseView(viewModel: purchaseViewModel)
+        }
+    }
+}
+```
+
+Each child feature receives one owning ViewModel. The composition view arranges them without copying their state into an aggregate ViewModel. Reusable visual components inside either feature receive values, bindings, and action closures instead of these ViewModels.
 
 ## App composition root
 
@@ -61,7 +90,7 @@ let viewModel = factory.makeItemListViewModel(useCase: useCase)
 // 4. App retains the graph and supplies the ViewModel to the View.
 ```
 
-Pass the same manager instances to other consumers when their state must be shared. Do not add service lookup or `makeEntireFeature()` / `makeApp()` methods. The View receives its ViewModel, not the factory.
+Pass the same manager instances to other consumers when their state must be shared. Do not add service lookup or `makeEntireFeature()` / `makeApp()` methods. Feature views receive their owning ViewModel; composition views may receive child ViewModels. Neither receives the factory.
 
 See [the example](examples.md#5-appfactory-individual-creation) for factory methods and `App` wiring.
 
@@ -74,7 +103,9 @@ See [the example](examples.md#5-appfactory-individual-creation) for factory meth
 | Manager | Other manager protocols, Foundation, system frameworks |
 | UseCase | Manager protocols, domain models (never other UseCases) |
 | ViewModel | One or more focused UseCase protocols, feature models (never other ViewModels) |
-| View | ViewModel, Component, SwiftUI |
+| Feature View | Its one owning feature ViewModel, values, bindings, closures, Component, SwiftUI |
+| Composition View | Child feature ViewModels, composed views, presentation state, SwiftUI |
+| Component | Values, bindings, action closures, local visual state, SwiftUI |
 
 ## Testing
 

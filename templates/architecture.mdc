@@ -17,9 +17,15 @@ Each factory method creates one Manager, UseCase, or ViewModel and accepts its d
 
 ## Rules
 
+**One main feature View → exactly one owning ViewModel → one or more focused UseCase protocols.** Do not interpret one ViewModel as one UseCase.
+
 - ViewModels depend on **one or more focused UseCase protocols** — never managers or other ViewModels.
 - Each UseCase owns one focused business responsibility and depends directly on manager protocols, never another UseCase.
-- Views depend on **view models** only — never use cases or managers.
+- Each feature View receives exactly one owning feature ViewModel; values, bindings, and closures are also allowed.
+- Composition views may receive multiple child ViewModels supplied by `App` to assemble independent features. Do not add aggregate ViewModels merely to contain child ViewModels.
+- Reusable visual components receive values, bindings, and action closures, not feature ViewModels.
+- Views do not call UseCases, perform business operations, or create services.
+- Use closures for focused component actions, presentation events, and content composition. Avoid excessive callback APIs, redundant forwarding chains, and closures that conceal forbidden dependencies or duplicate the owning ViewModel's business actions.
 - Use **protocol types** in `init` parameters.
 - ViewModels: `@Observable`, `@MainActor`, nested `ViewState` enum.
 

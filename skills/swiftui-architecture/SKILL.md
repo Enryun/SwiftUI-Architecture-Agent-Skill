@@ -27,6 +27,14 @@ Use the smallest structure that keeps responsibilities clear.
 | **Feature with infra** (API/storage/filesystem/device) | Manager protocol(s) + UseCase + ViewModel |
 | **Multiple implementations / platform differences** (availability/config selection, complex wiring) | Select implementations in focused factories; compose dependencies in `App` |
 
+## Core feature boundary
+
+**One main feature View → exactly one owning ViewModel → one or more focused UseCase protocols.**
+
+The one-ViewModel rule does **not** mean one UseCase. When the same feature needs profile, purchase, or preference operations, inject the relevant focused UseCase protocols into its existing ViewModel. Do not add another ViewModel or merge unrelated UseCases just to serve that feature.
+
+Closures support component actions, presentation events, and content composition. Keep callback APIs small and purposeful; do not use closures to conceal forbidden dependencies, move business workflows into Views, or forward actions through layers of otherwise unnecessary containers. See [closure boundaries](references/layer-overview.md#closure-boundaries).
+
 ## Non-negotiable rules
 
 1. **Unidirectional dependencies:**
@@ -35,7 +43,7 @@ Use the smallest structure that keeps responsibilities clear.
 2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
 3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
 4. **ViewModels depend on one or more focused UseCase protocols** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
-5. **Views never access use cases or managers** — only the view model.
+5. **Views have explicit roles** — each feature View receives exactly one owning feature ViewModel. Composition views may receive multiple child ViewModels to assemble independent features using instances supplied by `App`. Reusable visual components receive values, bindings, and action closures. Views do not call UseCases, perform business operations, or create services.
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
@@ -74,7 +82,7 @@ Use the smallest structure that keeps responsibilities clear.
 - [ ] Manager — `Interface/` + `Implementation/` (+ `Model/` if needed)
 - [ ] UseCases — reuse or add focused protocol/implementation pairs for the required business responsibilities
 - [ ] ViewModel — `[Feature]ViewModel` + `ViewState`
-- [ ] View — `[Feature]View`
+- [ ] View — `[Feature]View` receives one owning ViewModel; compose independent features without an aggregate ViewModel
 - [ ] DI wired in `App`; shared manager instances created once and reused
 
 ## Layer quick reference
@@ -86,7 +94,9 @@ Use the smallest structure that keeps responsibilities clear.
 | Manager Feature | App-specific system/integration APIs |
 | UseCase | One focused business responsibility; orchestrate manager protocols directly, never other UseCases |
 | ViewModel | UI state, user actions → one or more focused UseCase protocols; no other ViewModels |
-| View | SwiftUI layout only |
+| Feature View | Present one feature; forward actions to its one owning ViewModel |
+| Composition View | Assemble independent feature views; own layout and cross-feature presentation, not feature business state |
+| Component | Visual UI driven by values, bindings, and action closures |
 
 ## Testing guidance
 

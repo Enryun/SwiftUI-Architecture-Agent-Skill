@@ -90,6 +90,18 @@ Do not add methods that construct managers, UseCases, and ViewModels together. U
 
 Do not inject `PurchaseViewModel` into `ProfileViewModel` to reuse purchase behavior. Inject `PurchaseUseCaseProtocol` alongside `ProfileUseCaseProtocol`; each ViewModel owns its own presentation state.
 
+## Aggregate ViewModel used only as a container
+
+Do not add `AccountViewModel` merely to hold `ProfileViewModel` and `PurchaseViewModel` or mirror their state. Let a composition view receive the existing child ViewModels from `App` and assemble their feature views. Each feature View still receives only its own ViewModel.
+
+Do not pass both ViewModels into a reusable row or button. Pass the values, bindings, and action closures that visual component needs.
+
+## Closure overuse and hidden dependencies
+
+Do not inject a collection of business-operation callbacks into a feature View alongside its ViewModel. Keep feature actions on that ViewModel. A callback that captures a Manager or UseCase to perform the feature's business work still bypasses the intended dependency flow.
+
+Avoid chains of containers that merely forward callbacks. Reassess composition and responsibility before adding more callbacks or a generic dispatcher. See [closure boundaries](layer-overview.md#closure-boundaries).
+
 ## UseCase → UseCase
 
 Do not inject `PurchaseUseCaseProtocol` into `ProfileUseCase` merely to forward purchase actions. Let the ViewModel depend on both focused protocols. If a single business operation requires several infrastructure steps, its owning UseCase calls the required manager protocols directly; do not move that business workflow into the ViewModel.
