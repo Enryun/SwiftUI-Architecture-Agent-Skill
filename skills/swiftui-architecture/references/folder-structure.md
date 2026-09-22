@@ -46,7 +46,7 @@ Manager/Common/Navigation/
 └── Model/NavigationRoute.swift    # protocol; per-stack routes in feature Model/
 ```
 
-Per-feature route enums conform to `NavigationRoute` in `Pages/[Feature]/Model/`.
+Per-stack route enums conform to `NavigationRoute` in the owning feature/composition `Model/` folder. Navigation is presentation state despite its Manager location; scope each instance to an independent stack/window. See [navigation and lifetimes](navigation.md).
 
 ## Networking (Common manager)
 

@@ -11,3 +11,5 @@ This repository is an **Agent Skills** package for SwiftUI app architecture.
 ViewModels may depend on multiple focused UseCase protocols. ViewModel → ViewModel and UseCase → UseCase dependencies are forbidden; UseCases call manager protocols directly.
 
 Feature views receive exactly one owning ViewModel. Composition views may assemble independent features using multiple child ViewModels supplied by `App`. Reusable visual components receive values, bindings, and action closures.
+
+Navigation is a presentation-state exception: feature/composition Views may access scoped navigation, while ViewModels/UseCases may not. Scene/root composition may own local navigation state per stack/window; `App` defines business-service sharing.

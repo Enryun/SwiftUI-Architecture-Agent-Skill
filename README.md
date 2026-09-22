@@ -102,6 +102,8 @@ View → ViewModel → UseCase → Manager
 
 `AppFactory` above is an example name. Start with one factory and split into focused domain/platform factories when current complexity warrants it. `App` wires the graph and reuses shared manager instances. Factory methods must not hide complete feature/application graphs or contain business logic.
 
+Navigation is presentation state scoped to each independent stack/window. Views may access it as an explicit exception to infrastructure-manager boundaries; ViewModels and UseCases may not. See [navigation and lifetimes](skills/swiftui-architecture/references/navigation.md).
+
 Details: [`ARCHITECTURE-CHECKS.md`](ARCHITECTURE-CHECKS.md) and [`skills/swiftui-architecture/references/`](skills/swiftui-architecture/references/).
 
 ## Contributing

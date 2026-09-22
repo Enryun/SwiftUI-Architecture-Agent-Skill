@@ -7,12 +7,13 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 | Layer | May do | Must not do |
 |-------|--------|-------------|
 | **Factory** | Create one Manager, UseCase, or ViewModel per method using supplied dependencies; select implementations | Business logic; hidden feature/application graphs; ownership of shared services |
-| **Manager (Common)** | Reusable infra: logging, navigation, networking, storage | Feature-specific business rules |
+| **Manager (Common)** | Reusable infra: logging, networking, storage | Feature-specific business rules |
+| **Navigation (presentation)** | Scoped path state and navigation operations; accessible by Views | Business operations; dependencies from ViewModels/UseCases |
 | **Manager (Feature)** | App-specific system APIs (camera, files, ML, etc.) | UI state; orchestration across features |
 | **UseCase** | Focused business logic; async orchestration; call manager protocols | Touch SwiftUI; depend on ViewModels or other UseCases |
 | **ViewModel** | UI state; `ViewState` enum; call focused UseCase protocols | Depend on or call Managers or other ViewModels |
 | **Feature View** | Present one feature; receive one owning ViewModel plus values, bindings, closures | Receive unrelated feature ViewModels; business operations; service creation |
-| **Composition View** | Assemble feature views using child ViewModels from `App`; coordinate presentation | Call UseCases; create services; duplicate feature business state |
+| **Composition View** | Assemble feature views using child ViewModels from `App`; coordinate presentation | Call UseCases; create business services; duplicate feature business state |
 | **Component** | Render values; use bindings and action closures; own local visual state | Depend on feature ViewModels, UseCases, or Managers |
 
 ## Dependency flow
@@ -24,6 +25,16 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 | Protocols | Depend on protocol types in initializers, not concrete types |
 | Injection | Pass dependencies through `init`; composition root in `App` |
 | Circles | No upward references between layers |
+
+## Navigation and lifetimes
+
+- Views own navigation and may access scoped navigation state as a presentation-only exception; ViewModels and UseCases may not.
+- ViewModels expose operation results/UI state, not routes, navigation commands, or navigation callbacks. Views interpret outcomes for presentation.
+- Paths belong to independent stacks/windows, not automatically the whole app. Scene/root composition may own local navigation state.
+- Routes carry identifiers or values, never ViewModels/services. Register only destinations supported by that stack.
+- `App` defines shared service lifetimes; choose feature/destination lifetimes deliberately.
+
+Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/references/navigation.md).
 
 ## ViewModel
 

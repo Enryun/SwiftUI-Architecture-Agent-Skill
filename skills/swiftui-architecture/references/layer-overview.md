@@ -45,7 +45,7 @@ protocol AppFactoryProtocol {
 
 ### Manager/Common
 
-Reusable across apps: Logging, Navigation, Networking, Storage, Analytics.
+Reusable across apps: Logging, Networking, Storage, Analytics. Navigation may share this folder as a presentation-state exception described below.
 
 ### Manager/Feature
 
@@ -66,7 +66,7 @@ Manager/.../[Domain]/
     └── Error/
 ```
 
-**Rules:** No business orchestration across features; no SwiftUI.
+**Rules:** No business orchestration across features; no SwiftUI in infrastructure managers. `NavigationManager` is a presentation-state exception despite its folder/name: it may use SwiftUI bindings and be accessed by Views, never ViewModels or UseCases. See [navigation and lifetimes](navigation.md).
 
 ## UseCase
 
@@ -116,15 +116,17 @@ Choose the role by responsibility, not the type's name or how many screens it di
 - Receives exactly one owning feature ViewModel, including destination screens and embedded feature sections.
 - May also receive value models, bindings, and action closures.
 - Presents that feature's state and forwards user actions to its ViewModel.
-- Does not receive another feature's ViewModel, call UseCases, create services, or perform business operations.
+- Does not receive another feature's ViewModel, call UseCases, create business services, or perform business operations.
 - Extract visual subviews using values, bindings, and closures; a visual subview does not need its own ViewModel merely because it is a separate type.
+
+Feature Views may also access their scoped navigation environment for presentation only; this is not another feature ViewModel or a business-service dependency.
 
 ### Composition View
 
 - Assembles independent feature views using child ViewModels supplied by `App`; may receive multiple child ViewModels.
-- Owns layout, navigation destinations, and cross-feature presentation such as which feature sheet is displayed.
+- Owns layout, navigation destinations, and cross-feature presentation such as which feature sheet is displayed. May own local stack navigation state; shared business services remain composed by `App`.
 - Keeps each feature's loading, actions, and business state in that feature's existing ViewModel.
-- Does not construct services, call UseCases, or perform business operations.
+- Does not construct business services, call UseCases, or perform business operations.
 - Do not create an aggregate ViewModel solely to hold child ViewModels or copy their state.
 - Use content closures for intermediate layout-only views; avoid forwarding containers without a concrete responsibility.
 

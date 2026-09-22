@@ -65,7 +65,10 @@ Reuse an existing factory; add a creation method only when a new dependency must
 
 - [ ] Wire individual objects in `App` through factories
 - [ ] Create shared managers once in `App` and reuse those instances
-- [ ] Navigation: `NavigationManager<FeatureRoute>` if using stack routes
+- [ ] Navigation: typed routes and one path per independent stack/window; local state or `NavigationManager<FeatureRoute>` as needed
+- [ ] Route payloads contain identifiers/values, not ViewModels or services
+- [ ] Navigation accessed only by presentation Views, never ViewModels/UseCases
+- [ ] Destination ViewModel identity and lifetime are explicit
 
 ## 9. Optional
 

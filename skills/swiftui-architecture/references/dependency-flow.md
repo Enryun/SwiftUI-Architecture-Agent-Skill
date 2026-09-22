@@ -103,9 +103,13 @@ See [the example](examples.md#5-appfactory-individual-creation) for factory meth
 | Manager | Other manager protocols, Foundation, system frameworks |
 | UseCase | Manager protocols, domain models (never other UseCases) |
 | ViewModel | One or more focused UseCase protocols, feature models (never other ViewModels) |
-| Feature View | Its one owning feature ViewModel, values, bindings, closures, Component, SwiftUI |
-| Composition View | Child feature ViewModels, composed views, presentation state, SwiftUI |
+| Feature View | Its one owning feature ViewModel, values, bindings, closures, Component, SwiftUI, scoped navigation environment (presentation only) |
+| Composition View | Child feature ViewModels, composed views, scoped navigation/presentation state, SwiftUI |
 | Component | Values, bindings, action closures, local visual state, SwiftUI |
+
+## Lifetimes
+
+`App` defines sharing; scene/root composition scopes local presentation state. Navigation belongs to an independent stack/window, not automatically to the whole app. See [navigation and lifetimes](navigation.md) before choosing where to retain instances.
 
 ## Testing
 

@@ -43,7 +43,7 @@ Closures support component actions, presentation events, and content composition
 2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
 3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
 4. **ViewModels depend on one or more focused UseCase protocols** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
-5. **Views have explicit roles** — each feature View receives exactly one owning feature ViewModel. Composition views may receive multiple child ViewModels to assemble independent features using instances supplied by `App`. Reusable visual components receive values, bindings, and action closures. Views do not call UseCases, perform business operations, or create services.
+5. **Views have explicit roles** — each feature View receives exactly one owning feature ViewModel. Composition views may receive multiple child ViewModels to assemble independent features using instances supplied by `App`. Reusable visual components receive values, bindings, and action closures. Views do not call UseCases, perform business operations, or create business services. Scoped navigation state is a presentation exception: feature/composition Views may access it; ViewModels and UseCases may not. ViewModels expose operation results and UI state, not routes or navigation commands; Views decide how to navigate. See [navigation and lifetimes](references/navigation.md).
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
@@ -90,7 +90,8 @@ Closures support component actions, presentation events, and content composition
 | Layer | Responsibility |
 |-------|----------------|
 | Factory | Create individual Managers, UseCases, and ViewModels from supplied dependencies. `App` composes and shares the graph |
-| Manager Common | Logging, navigation, networking, storage |
+| Manager Common | Logging, networking, storage |
+| Navigation | Presentation state scoped to a stack/window; Views may access it, ViewModels/UseCases may not |
 | Manager Feature | App-specific system/integration APIs |
 | UseCase | One focused business responsibility; orchestrate manager protocols directly, never other UseCases |
 | ViewModel | UI state, user actions → one or more focused UseCase protocols; no other ViewModels |
@@ -146,5 +147,6 @@ Read only what you need:
 - [Naming conventions](references/naming-conventions.md)
 - [New feature checklist](references/new-feature-checklist.md)
 - [Anti-patterns](references/anti-patterns.md)
+- [Navigation and dependency lifetimes](references/navigation.md)
 - [Concurrency](references/concurrency.md)
 - [End-to-end example](references/examples.md)
