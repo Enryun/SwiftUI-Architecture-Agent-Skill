@@ -58,7 +58,7 @@ SwiftUI-Architecture/
 ├── ARCHITECTURE-CHECKS.md     # Human-readable index of rules
 ├── skills/swiftui-architecture/
 │   ├── SKILL.md               # Agent entrypoint
-│   └── references/            # Detailed specs
+│   └── references/            # Detailed specs and complete example
 └── templates/
     └── architecture.mdc       # Optional Cursor rule template
 ```

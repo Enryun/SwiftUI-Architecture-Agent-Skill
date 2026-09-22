@@ -92,7 +92,7 @@ let viewModel = factory.makeItemListViewModel(useCase: useCase)
 
 Pass the same manager instances to other consumers when their state must be shared. Do not add service lookup or `makeEntireFeature()` / `makeApp()` methods. Feature views receive their owning ViewModel; composition views may receive child ViewModels. Neither receives the factory.
 
-See [the example](examples.md#5-appfactory-individual-creation) for factory methods and `App` wiring.
+See [the complete example](examples.md) for factory methods and `App` wiring.
 
 ## What each layer may import
 
