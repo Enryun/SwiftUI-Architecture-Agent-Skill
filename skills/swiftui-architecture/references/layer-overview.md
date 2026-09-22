@@ -16,8 +16,6 @@
 
 **Structure**
 
-A small app can use `Factory` or `AppFactory`; these names are interchangeable conventions. For example:
-
 ```
 Factory/
 ├── Interface/AppFactoryProtocol.swift
@@ -82,8 +80,6 @@ Manager/.../[Domain]/
 - May expose `AsyncStream` or publishers for progress
 
 **Structure**
-
-A small app can use `Factory` or `AppFactory`; these names are interchangeable conventions. For example:
 
 ```
 UseCase/[Domain]/[Feature]/

@@ -2,7 +2,7 @@
 
 Open-source Agent Skills for structuring **SwiftUI iOS/macOS apps** with a layered stack:
 
-**Runtime: View → ViewModel → UseCase → Manager**
+**Runtime when those layers are present: View → ViewModel → UseCase → Manager**
 
 **Construction: App composes and shares dependencies; factories create individual instances.**
 
@@ -81,9 +81,9 @@ See [`skills/swiftui-architecture/SKILL.md`](skills/swiftui-architecture/SKILL.m
 
 ```
 App
-  ├─ AppFactory.createManager(...) → manager
-  ├─ AppFactory.createUseCase(manager: manager) → useCase
-  └─ AppFactory.makeViewModel(useCase: useCase) → viewModel
+  ├─ Factory.createManager(...) → manager
+  ├─ Factory.createUseCase(manager: manager) → useCase
+  └─ Factory.makeViewModel(useCase: useCase) → viewModel
 ```
 
 **Runtime** (each user action):

@@ -40,7 +40,7 @@ Closures support component actions, presentation events, and content composition
 ## Non-negotiable rules
 
 1. **Unidirectional dependencies:**
-   - Runtime flow is `View → ViewModel → UseCase → Manager`.
+   - Runtime flow is `View → ViewModel → UseCase → Manager` when those layers are present; simple presentation-only features may stop at ViewModel.
    - `App` wires dependencies and owns shared lifetimes; factories create individual instances from supplied dependencies.
 2. **Protocol-first at boundaries:** Use protocols for replaceable infrastructure and business dependencies. A trivial private implementation does not need a protocol solely to satisfy this guide.
 3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum when mutually exclusive screen modes make it clearer. Independent state such as drafts, selection, sheets, and alerts may remain separate properties.

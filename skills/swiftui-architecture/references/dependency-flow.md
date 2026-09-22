@@ -16,7 +16,7 @@ Each factory call creates one object. `App` supplies the dependencies and inject
 **Runtime** (per action):
 
 ```
-View → ViewModel → UseCase → Manager
+View → ViewModel → UseCase → Manager (when those layers are present)
 ```
 
 Factory is part of **how objects are created**, not a hop in the runtime call chain.
