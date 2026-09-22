@@ -34,6 +34,8 @@ Prefer the UseCase boundary when a feature has real business rules or orchestrat
 ## Review mode
 
 When reviewing an existing project, inspect and trace actual dependencies first. Report file-backed findings as required corrections, recommendations, or contextual options. Do not scaffold, restructure, add tests, or run builds unless separately requested. Prefer the smallest correction, and preserve implementation scope already approved by the user.
+
+Avoid obvious descriptive comments that repeat what names and code already say. Keep comments that explain why, an invariant, an ownership/concurrency constraint, a platform workaround, or a public API contract.
 - Use **protocol types** in `init` parameters.
 - ViewModels: `@Observable`, `@MainActor`; use a nested `ViewState` when mutually exclusive modes benefit from it.
 

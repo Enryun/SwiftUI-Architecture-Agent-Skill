@@ -92,6 +92,7 @@ Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/refer
 - Separate required corrections, recommendations, and contextual options.
 - Do not scaffold, restructure, add tests, or run builds during a review unless separately requested.
 - Prefer the smallest correction that restores ownership or dependency direction.
+- Comments should explain non-obvious intent, invariants, ownership, platform workarounds, or concurrency constraints; remove obvious narration when editing code.
 
 ## Concurrency (summary)
 

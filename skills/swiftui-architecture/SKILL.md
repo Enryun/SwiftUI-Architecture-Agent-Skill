@@ -49,6 +49,8 @@ Closures support component actions, presentation events, and content composition
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
+8. **Comments explain intent, not syntax:** Do not add comments that restate an obvious declaration, method name, property name, or control flow. Add comments when they document a non-obvious invariant, ownership decision, platform workaround, concurrency constraint, public API contract, or follow-up requirement. Prefer clear names and structure over explanatory narration.
+
 ## Architecture review workflow
 
 Use this mode when the user asks to review, audit, inspect, or give feedback on an existing project.
@@ -61,6 +63,8 @@ Use this mode when the user asks to review, audit, inspect, or give feedback on 
 6. End with a prioritized list of reviewable changes. If the user approves a specific item, implement only that item and preserve earlier approved decisions.
 
 Review mode is evidence-first: existing code and the user's stated project contract take precedence over generic examples in this skill.
+
+During review, flag comments that merely narrate obvious code and remove them only when implementation is requested. Preserve comments that explain why the code must remain unusual.
 
 ## Model ownership
 

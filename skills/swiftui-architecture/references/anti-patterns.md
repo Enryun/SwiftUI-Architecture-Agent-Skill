@@ -1,5 +1,20 @@
 # Anti-patterns
 
+## Obvious descriptive comments
+
+Do not add comments that translate clear code into English or label self-explanatory sections:
+
+```swift
+// BAD — repeats the declaration
+let settingsViewModel = SettingsViewModel(useCase: useCase)
+
+// GOOD — explains a non-obvious lifetime decision
+// Keep this instance shared with the settings tab so both paths observe the same draft.
+let settingsViewModel = SettingsViewModel(useCase: useCase)
+```
+
+Useful comments explain why the code is constrained: an ownership or isolation invariant, a platform workaround, a public API contract, or a follow-up requirement. Prefer naming and structure for ordinary explanation. Do not remove a comment merely because it is short; remove it when it adds no information beyond the code.
+
 ## ViewModel → Manager directly
 
 ```swift
