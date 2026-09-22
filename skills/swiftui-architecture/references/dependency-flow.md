@@ -27,6 +27,17 @@ Factory is part of **how objects are created**, not a hop in the runtime call ch
 2. **No cycles** — if UseCase needs something from ViewModel, redesign.
 3. **Protocols at boundaries** — `FileSystemOperations`, not `FileSystemManager`.
 4. **Initializer injection** — no service locator inside ViewModels.
+5. **Focused dependencies** — a ViewModel may use multiple UseCase protocols. ViewModel → ViewModel and UseCase → UseCase dependencies are forbidden by this architecture.
+
+## Multiple focused UseCases
+
+```text
+ProfileView → ProfileViewModel
+               ├─ ProfileUseCaseProtocol → profile storage manager protocol
+               └─ PurchaseUseCaseProtocol → purchase manager protocol
+```
+
+The ViewModel owns presentation state and forwards user intents to the relevant UseCase. It does not borrow another ViewModel or chain business rules together itself. When an operation requires coordinated business steps, its focused UseCase calls the required manager protocols directly.
 
 ## App composition root
 
@@ -61,8 +72,8 @@ See [the example](examples.md#5-appfactory-individual-creation) for factory meth
 | App | Factory protocols, dependency protocols, ViewModel, View (composition and sharing) |
 | Factory | Manager protocols/implementations, UseCase, ViewModel (individual creation only) |
 | Manager | Other manager protocols, Foundation, system frameworks |
-| UseCase | Manager protocols, domain models |
-| ViewModel | UseCase protocols, feature models |
+| UseCase | Manager protocols, domain models (never other UseCases) |
+| ViewModel | One or more focused UseCase protocols, feature models (never other ViewModels) |
 | View | ViewModel, Component, SwiftUI |
 
 ## Testing
@@ -70,5 +81,5 @@ See [the example](examples.md#5-appfactory-individual-creation) for factory meth
 | Layer | Mock |
 |-------|------|
 | UseCase tests | Fake manager protocols |
-| ViewModel tests | Fake use case protocol |
+| ViewModel tests | Fakes for the injected UseCase protocols |
 | View previews | ViewModel with preview/mock use case |

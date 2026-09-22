@@ -6,7 +6,7 @@ Use when adding `[Feature]` to an existing SwiftUI app.
 
 - [ ] Feature name and domain (`Catalog` / `ItemDetail`)
 - [ ] Which managers are needed (new vs existing)
-- [ ] Use case public API (methods, async, streams)
+- [ ] Focused UseCases needed (reuse vs new) and each public API (methods, async, streams)
 - [ ] `ViewState` cases
 - [ ] Navigation routes (if any)
 
@@ -31,13 +31,15 @@ Reuse an existing factory; add a creation method only when a new dependency must
 
 - [ ] `UseCase/[Domain]/[Feature]/Interface/[Feature]UseCaseProtocol.swift`
 - [ ] `UseCase/[Domain]/[Feature]/Implementation/[Feature]UseCase.swift`
-- [ ] Inject manager protocols in `init`
+- [ ] Each UseCase owns one focused business responsibility
+- [ ] Inject manager protocols in `init`; no other UseCase dependencies
 - [ ] `async` APIs; cancellation in long operations
 
 ## 5. ViewModel
 
 - [ ] `Pages/[Feature]/ViewModel/[Feature]ViewModel.swift`
 - [ ] `@Observable` + `@MainActor`
+- [ ] Inject one or more focused UseCase protocols; no managers or other ViewModels
 - [ ] `enum ViewState { ... }`
 - [ ] `private(set) var state`
 - [ ] Extensions for logical groups (loading, filtering)
@@ -69,5 +71,6 @@ Reuse an existing factory; add a creation method only when a new dependency must
 ## 10. Review
 
 - [ ] No upward dependencies
+- [ ] No ViewModel → ViewModel or UseCase → UseCase dependencies
 - [ ] No concrete manager types in ViewModel `init`
 - [ ] No business logic in View

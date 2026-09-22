@@ -92,8 +92,8 @@ View → ViewModel → UseCase → Manager
 |-------|------|
 | **Factory** | Create one Manager, UseCase, or ViewModel per method from supplied dependencies; select platform implementations when needed. |
 | **Manager** | Infrastructure (Common + Feature), protocol-based |
-| **UseCase** | Business logic; orchestrates manager protocols |
-| **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum |
+| **UseCase** | Focused business responsibility; calls manager protocols directly, never other UseCases |
+| **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum; one or more focused UseCase protocols, no other ViewModels |
 | **View** | Presentation only |
 
 `AppFactory` above is an example name. Start with one factory and split into focused domain/platform factories when current complexity warrants it. `App` wires the graph and reuses shared manager instances. Factory methods must not hide complete feature/application graphs or contain business logic.

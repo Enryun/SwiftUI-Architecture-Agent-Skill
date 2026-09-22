@@ -70,13 +70,14 @@ Manager/.../[Domain]/
 
 ## UseCase
 
-**Purpose:** Business logic for one feature; orchestrate manager protocols.
+**Purpose:** Own one focused business responsibility; orchestrate manager protocols directly. A feature may require several UseCases.
 
 **Rules**
 
 - `[Feature]UseCaseProtocol` + `[Feature]UseCase`
 - `async/await` for operations
-- Inject manager **protocols** in `init`
+- Inject the narrow manager **protocols** needed in `init`
+- Never depend on or call another UseCase. Keep a business workflow in the UseCase responsible for that operation, using manager protocols directly
 - Respect cancellation in long work
 - May expose `AsyncStream` or publishers for progress
 
@@ -98,7 +99,9 @@ UseCase/[Domain]/[Feature]/
 
 - `@Observable` + `@MainActor`
 - Nested `enum ViewState` with associated values
-- Depends on **one primary** use case protocol
+- Depends on one or more focused UseCase protocols; no required primary UseCase
+- Never depends on managers or other ViewModels
+- Do not merge unrelated business responsibilities into a single UseCase to reduce initializer parameters
 - Filtering, selection, pagination — UI-facing only
 - Organize with extensions (e.g. `// MARK: - Loading`)
 

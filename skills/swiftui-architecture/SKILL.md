@@ -34,7 +34,7 @@ Use the smallest structure that keeps responsibilities clear.
    - `App` wires dependencies and owns shared lifetimes; factories create individual instances from supplied dependencies.
 2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
 3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
-4. **ViewModels never access managers** — only use case protocols.
+4. **ViewModels depend on one or more focused UseCase protocols** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
 5. **Views never access use cases or managers** — only the view model.
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
@@ -72,7 +72,7 @@ Use the smallest structure that keeps responsibilities clear.
 
 - [ ] Factory — reuse existing factories; add individual creation methods for new dependencies and split only at a concrete domain/platform boundary
 - [ ] Manager — `Interface/` + `Implementation/` (+ `Model/` if needed)
-- [ ] UseCase — `[Feature]UseCaseProtocol` + `[Feature]UseCase`
+- [ ] UseCases — reuse or add focused protocol/implementation pairs for the required business responsibilities
 - [ ] ViewModel — `[Feature]ViewModel` + `ViewState`
 - [ ] View — `[Feature]View`
 - [ ] DI wired in `App`; shared manager instances created once and reused
@@ -84,14 +84,14 @@ Use the smallest structure that keeps responsibilities clear.
 | Factory | Create individual Managers, UseCases, and ViewModels from supplied dependencies. `App` composes and shares the graph |
 | Manager Common | Logging, navigation, networking, storage |
 | Manager Feature | App-specific system/integration APIs |
-| UseCase | Business logic; orchestrate manager protocols |
-| ViewModel | UI state, user actions → use case |
+| UseCase | One focused business responsibility; orchestrate manager protocols directly, never other UseCases |
+| ViewModel | UI state, user actions → one or more focused UseCase protocols; no other ViewModels |
 | View | SwiftUI layout only |
 
 ## Testing guidance
 
 - **UseCase tests**: mock Manager protocols; verify business rules and orchestration.
-- **ViewModel tests**: mock UseCase protocol; verify `ViewState` transitions and user-intent handlers.
+- **ViewModel tests**: mock the injected UseCase protocols; verify `ViewState` transitions and user-intent handlers.
 - **View tests**: prefer previews and snapshot-style checks; keep Views thin and deterministic.
 
 ## Migration guidance
@@ -99,8 +99,10 @@ Use the smallest structure that keeps responsibilities clear.
 If adopting this architecture in an existing codebase:
 
 - **Existing MVVM**: introduce a UseCase when business logic grows beyond UI state shaping.
-- **ViewModel calling managers directly**: wrap manager calls behind a UseCase protocol; ViewModel depends on the UseCase only.
+- **ViewModel calling managers directly**: wrap manager calls behind a UseCase protocol; ViewModel depends on the relevant UseCase protocols only.
 - **Factory migration**: keep individual creation methods in appropriately scoped factories. Move graph assembly and shared-instance ownership into `App`; replace hidden feature builders one feature at a time. Do not consolidate focused factories merely to enforce a single factory.
+
+- **ViewModel or UseCase chains**: remove ViewModel → ViewModel and UseCase → UseCase dependencies. Inject focused UseCases into the owning ViewModel; keep business workflows inside a focused UseCase operating directly on manager protocols.
 
 ## Anti-patterns (reject if suggested)
 

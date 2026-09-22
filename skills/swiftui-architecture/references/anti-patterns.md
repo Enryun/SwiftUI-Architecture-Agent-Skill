@@ -86,9 +86,17 @@ func createUseCase(
 
 Do not add methods that construct managers, UseCases, and ViewModels together. Use individual creation methods, whether there is one factory or several focused factories. `App` calls them in order and reuses shared manager instances.
 
+## ViewModel → ViewModel
+
+Do not inject `PurchaseViewModel` into `ProfileViewModel` to reuse purchase behavior. Inject `PurchaseUseCaseProtocol` alongside `ProfileUseCaseProtocol`; each ViewModel owns its own presentation state.
+
+## UseCase → UseCase
+
+Do not inject `PurchaseUseCaseProtocol` into `ProfileUseCase` merely to forward purchase actions. Let the ViewModel depend on both focused protocols. If a single business operation requires several infrastructure steps, its owning UseCase calls the required manager protocols directly; do not move that business workflow into the ViewModel.
+
 ## God UseCase
 
-One use case doing unrelated features → split by `[Feature]` under `UseCase/[Domain]/`.
+One UseCase doing unrelated business responsibilities → split into focused UseCases under `UseCase/[Domain]/`. Inject the relevant protocols into the ViewModel rather than creating a wrapper UseCase to hide them.
 
 ## Leaking SwiftUI into UseCase
 

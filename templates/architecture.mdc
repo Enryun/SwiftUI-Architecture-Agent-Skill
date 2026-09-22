@@ -17,7 +17,8 @@ Each factory method creates one Manager, UseCase, or ViewModel and accepts its d
 
 ## Rules
 
-- ViewModels depend on **use case protocols** only — never managers.
+- ViewModels depend on **one or more focused UseCase protocols** — never managers or other ViewModels.
+- Each UseCase owns one focused business responsibility and depends directly on manager protocols, never another UseCase.
 - Views depend on **view models** only — never use cases or managers.
 - Use **protocol types** in `init` parameters.
 - ViewModels: `@Observable`, `@MainActor`, nested `ViewState` enum.
