@@ -154,4 +154,5 @@ Read only what you need:
 - [Anti-patterns](references/anti-patterns.md)
 - [Navigation and dependency lifetimes](references/navigation.md)
 - [Concurrency](references/concurrency.md)
+- For deep Swift 6 concurrency diagnostics and migration, use the companion [Swift Concurrency Agent Skill](https://github.com/AvdLee/Swift-Concurrency-Agent-Skill).
 - [End-to-end example](references/examples.md)
