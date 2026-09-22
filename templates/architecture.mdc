@@ -9,11 +9,11 @@ Use the **swiftui-architecture** skill when scaffolding features or reviewing st
 
 ## Dependency flow
 
-Construction: `App` / Factory wire Manager, UseCase, ViewModel (Factory optional).
+Construction: `App` wires dependencies and owns shared lifetimes. Factories create individual instances. Start with one and split by domain/platform when current complexity warrants it; names and count are flexible.
 
 Runtime: `View → ViewModel → UseCase → Manager` (unidirectional).
 
-Factory = build managers (incl. availability/config) + optional `make[Feature]ViewModel()` — not business logic.
+Each factory method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Platform implementation selection is allowed. No business logic or hidden feature/application graphs.
 
 ## Rules
 

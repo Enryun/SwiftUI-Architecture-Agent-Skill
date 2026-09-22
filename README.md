@@ -2,7 +2,9 @@
 
 Open-source Agent Skills for structuring **SwiftUI iOS/macOS apps** with a layered stack:
 
-**Factory → Manager → UseCase → ViewModel → View**
+**Runtime: View → ViewModel → UseCase → Manager**
+
+**Construction: App composes and shares dependencies; factories create individual instances.**
 
 Protocol-first dependency injection, feature-based folders, and a recommend-first scaffold workflow for new projects and new features.
 
@@ -71,16 +73,13 @@ See [`skills/swiftui-architecture/SKILL.md`](skills/swiftui-architecture/SKILL.m
 
 ## Architecture at a glance
 
-**Construction** (what `App` / Factory wire at startup):
+**Construction** (`App` owns composition and shared lifetimes):
 
 ```
 App
-  ↓
-Factory — dependency construction & composition
-         • builds manager implementations (optional availability/config)
-         • may assemble UseCase → ViewModel for a feature
-  ↓
-Manager / UseCase / ViewModel (wired instances)
+  ├─ AppFactory.createManager(...) → manager
+  ├─ AppFactory.createUseCase(manager: manager) → useCase
+  └─ AppFactory.makeViewModel(useCase: useCase) → viewModel
 ```
 
 **Runtime** (each user action):
@@ -91,13 +90,13 @@ View → ViewModel → UseCase → Manager
 
 | Layer | Role |
 |-------|------|
-| **Factory** | Composition root: create managers; optionally wire feature graphs so `App` stays thin. Not a runtime hop on every call. |
+| **Factory** | Create one Manager, UseCase, or ViewModel per method from supplied dependencies; select platform implementations when needed. |
 | **Manager** | Infrastructure (Common + Feature), protocol-based |
 | **UseCase** | Business logic; orchestrates manager protocols |
 | **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum |
 | **View** | Presentation only |
 
-Factory is **optional** when there is a single manager implementation and you wire directly in `App`.
+`AppFactory` above is an example name. Start with one factory and split into focused domain/platform factories when current complexity warrants it. `App` wires the graph and reuses shared manager instances. Factory methods must not hide complete feature/application graphs or contain business logic.
 
 Details: [`ARCHITECTURE-CHECKS.md`](ARCHITECTURE-CHECKS.md) and [`skills/swiftui-architecture/references/`](skills/swiftui-architecture/references/).
 

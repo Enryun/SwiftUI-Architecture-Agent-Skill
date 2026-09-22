@@ -5,12 +5,13 @@
 **Construction** (startup / feature entry):
 
 ```
-App
-  ↓
-Factory (optional) — builds managers; may assemble UseCase + ViewModel
-  ↓
-wired instances: Manager, UseCase, ViewModel
+App — composition root; owns sharing and lifetimes
+  ├─ AppFactory.createManager(...) → manager
+  ├─ AppFactory.createUseCase(manager: manager) → useCase
+  └─ AppFactory.makeViewModel(useCase: useCase) → viewModel
 ```
+
+Each factory call creates one object. `App` supplies the dependencies and injects the resulting ViewModel into the View.
 
 **Runtime** (per action):
 
@@ -29,59 +30,36 @@ Factory is part of **how objects are created**, not a hop in the runtime call ch
 
 ## App composition root
 
-```swift
-@main
-struct MyApp: App {
-    private let itemListFactory: ItemListFactoryProtocol
+Use one factory initially, or focused domain/platform factories when complexity warrants them. `AppFactory` below is an example name, not a required singleton factory. Factory methods accept required dependencies as arguments; they do not assemble a feature graph internally.
 
-    init() {
-        itemListFactory = ItemListFactory()
-    }
-
-    var body: some Scene {
-        WindowGroup {
-            RootView(factory: itemListFactory)
-        }
-    }
-}
-```
-
-Factory may expose **manager builders** and **feature assemblers**:
+Illustrative wiring inside `App` initialization (`context` is supplied by the app's persistence setup):
 
 ```swift
-protocol CatalogFactoryProtocol {
-    func createStorage() -> any StorageProtocol<Item>
-    func makeItemListViewModel() -> ItemListViewModel
-}
+let factory: any AppFactoryProtocol = AppFactory()
+
+// 1. Create each shared manager once in App.
+let storage = factory.createStorage(context: context)
+let network = factory.createDownloadManager()
+
+// 2. App passes the existing managers to individual UseCase builders.
+let useCase = factory.createItemListUseCase(storage: storage, download: network)
+
+// 3. App passes the UseCase to the ViewModel builder.
+let viewModel = factory.makeItemListViewModel(useCase: useCase)
+
+// 4. App retains the graph and supplies the ViewModel to the View.
 ```
 
-`makeItemListViewModel()` typically constructs the use case internally, then the view model — so `App` stays thin.
+Pass the same manager instances to other consumers when their state must be shared. Do not add service lookup or `makeEntireFeature()` / `makeApp()` methods. The View receives its ViewModel, not the factory.
 
-## Wiring a feature
-
-```swift
-// 1. Managers (via factory or direct in small apps)
-let storage: StorageProtocol = SwiftDataStorageManager<Item>(context: context)
-let network: URLDownloadManagerProtocol = URLDownloadManager()
-
-// 2. Use case
-let useCase: ItemListUseCaseProtocol = ItemListUseCase(
-    storage: storage,
-    download: network
-)
-
-// 3. View model
-let viewModel = ItemListViewModel(useCase: useCase)
-
-// 4. View
-ItemListView(viewModel: viewModel)
-```
+See [the example](examples.md#5-appfactory-individual-creation) for factory methods and `App` wiring.
 
 ## What each layer may import
 
 | Layer | May depend on |
 |-------|----------------|
-| Factory | Manager protocols/implementations, UseCase, ViewModel (composition only) |
+| App | Factory protocols, dependency protocols, ViewModel, View (composition and sharing) |
+| Factory | Manager protocols/implementations, UseCase, ViewModel (individual creation only) |
 | Manager | Other manager protocols, Foundation, system frameworks |
 | UseCase | Manager protocols, domain models |
 | ViewModel | UseCase protocols, feature models |

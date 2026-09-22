@@ -25,18 +25,18 @@ Use the smallest structure that keeps responsibilities clear.
 | **Small screen** (simple UI state, no real business rules) | Simple MVVM: View + ViewModel |
 | **Medium feature** (business logic growing, rules, orchestration) | View + ViewModel + UseCase |
 | **Feature with infra** (API/storage/filesystem/device) | Manager protocol(s) + UseCase + ViewModel |
-| **Multiple implementations / platform differences** (availability/config selection, complex wiring) | Add a Factory for construction + composition |
+| **Multiple implementations / platform differences** (availability/config selection, complex wiring) | Select implementations in focused factories; compose dependencies in `App` |
 
 ## Non-negotiable rules
 
 1. **Unidirectional dependencies:**
    - Runtime flow is `View → ViewModel → UseCase → Manager`.
-   - `App`/Factory wire dependencies at construction (Factory optional when wiring in `App` is enough).
+   - `App` wires dependencies and owns shared lifetimes; factories create individual instances from supplied dependencies.
 2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
 3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
 4. **ViewModels never access managers** — only use case protocols.
 5. **Views never access use cases or managers** — only the view model.
-6. **Factories wire, they don't decide business outcomes** — construction and composition only; no business logic.
+6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
 ## Scaffold workflow
@@ -46,7 +46,7 @@ Use the smallest structure that keeps responsibilities clear.
 1. Confirm feature name and domain (e.g. `Catalog` / `ItemList`).
 2. List files to add under:
    - `Pages/`
-   - `Factory/` (optional)
+   - `Factory/` (factory protocols + implementations)
    - `Manager/`
    - `UseCase/`
    - `Component/`
@@ -57,33 +57,31 @@ Use the smallest structure that keeps responsibilities clear.
 3. Output:
    - Folder tree
    - Protocol names per layer
-   - Dependency graph (what `App` or factory wires)
+   - Dependency graph (what `App` wires and shares)
    - `ViewState` cases for the ViewModel
 4. **Stop** and ask for approval.
 
 ### Phase 2 — Implement (after approval)
 
 5. Create protocols before implementations.
-6. Wire composition root in `App` or domain factory.
+6. Wire the composition root in `App`, calling factories for individual instances.
 7. ViewModel + View last.
 8. Extract shared UI to `Component/` only when used by 2+ features.
 
 ## New feature checklist (short)
 
-- [ ] Factory — if selecting manager implementations (availability/config)
-      **or** assembling UseCase + ViewModel for `App`
-      (skip if wiring once in `App` is enough)
+- [ ] Factory — reuse existing factories; add individual creation methods for new dependencies and split only at a concrete domain/platform boundary
 - [ ] Manager — `Interface/` + `Implementation/` (+ `Model/` if needed)
 - [ ] UseCase — `[Feature]UseCaseProtocol` + `[Feature]UseCase`
 - [ ] ViewModel — `[Feature]ViewModel` + `ViewState`
 - [ ] View — `[Feature]View`
-- [ ] DI wired at App/factory
+- [ ] DI wired in `App`; shared manager instances created once and reused
 
 ## Layer quick reference
 
 | Layer | Responsibility |
 |-------|----------------|
-| Factory | Dependency construction & composition: build managers (incl. availability/config when needed); may expose `make[Feature]ViewModel()` so `App` stays thin |
+| Factory | Create individual Managers, UseCases, and ViewModels from supplied dependencies. `App` composes and shares the graph |
 | Manager Common | Logging, navigation, networking, storage |
 | Manager Feature | App-specific system/integration APIs |
 | UseCase | Business logic; orchestrate manager protocols |
@@ -102,8 +100,7 @@ If adopting this architecture in an existing codebase:
 
 - **Existing MVVM**: introduce a UseCase when business logic grows beyond UI state shaping.
 - **ViewModel calling managers directly**: wrap manager calls behind a UseCase protocol; ViewModel depends on the UseCase only.
-- **No factories today**: add a Factory when you need implementation selection
-  (availability/config/platform) or when wiring in `App` becomes noisy.
+- **Factory migration**: keep individual creation methods in appropriately scoped factories. Move graph assembly and shared-instance ownership into `App`; replace hidden feature builders one feature at a time. Do not consolidate focused factories merely to enforce a single factory.
 
 ## Anti-patterns (reject if suggested)
 

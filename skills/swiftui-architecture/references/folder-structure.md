@@ -12,10 +12,8 @@ App/
 │       ├── View/
 │       └── ViewModel/
 ├── Factory/
-│   └── [Domain]/
-│       ├── Interface/
-│       ├── Implementation/
-│       └── Model/
+│   ├── Interface/AppFactoryProtocol.swift
+│   └── Implementation/AppFactory.swift
 ├── Manager/
 │   ├── Common/               # Logging, Navigation, Networking, Storage, …
 │   │   └── [Service]/
@@ -36,6 +34,8 @@ App/
 ├── Constants/
 └── Utility/                  # Extension+Type.swift
 ```
+
+The tree shows one `AppFactory` as a starting point, not a naming or count requirement. When complexity warrants it, use `Factory/[Domain]/Interface/[Domain]FactoryProtocol.swift` and `Factory/[Domain]/Implementation/[Domain]Factory.swift`. Keep graph composition and shared lifetimes in `App`.
 
 ## Navigation (Common manager)
 
@@ -71,7 +71,7 @@ Manager/Common/Storage/
 ## SPM / multi-target
 
 - Shared layers → shared framework target
-- Platform-specific factories or managers → platform target or `Providers/`
+- Factories that construct target-specific types → corresponding app target; platform-specific managers → platform target or `Providers/`
 - Move target-specific ViewModels/Views out of shared code when iOS/macOS diverge
 
 ## File placement rules
@@ -81,7 +81,8 @@ Manager/Common/Storage/
 | Feature screen + VM | `Pages/[Feature]/` |
 | Business logic | `UseCase/[Domain]/[Feature]/` |
 | System API wrapper | `Manager/Common/` or `Manager/Feature/` |
-| Manager construction & feature assembly | `Factory/[Domain]/` (optional) |
+| Individual dependency creation | `Factory/` or `Factory/[Domain]/` |
+| Dependency composition & shared lifetimes | `App` |
 | Shared button, row style | `Component/` |
 | UserDefaults key strings | `Constants/` |
 | `URL.isRemoteURL` helper | `Utility/` |

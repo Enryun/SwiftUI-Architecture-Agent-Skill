@@ -106,44 +106,72 @@ struct ItemListView: View {
 }
 ```
 
-## 5. Factory (optional)
+## 5. AppFactory (individual creation)
+
+`AppFactory` is the example name for this small graph; larger applications may split creation methods into focused domain/platform factories. Each method creates one object using dependencies supplied by `App`. The storage and networking implementations below are illustrative; their definitions are omitted.
 
 ```swift
-protocol CatalogFactoryProtocol {
-    func makeItemListViewModel() -> ItemListViewModel
+protocol AppFactoryProtocol {
+    func createStorage(context: ModelContext) -> any StorageProtocol<Item>
+    func createDownloadManager() -> any URLDownloadManagerProtocol
+    func createItemListUseCase(
+        storage: any StorageProtocol<Item>,
+        download: any URLDownloadManagerProtocol
+    ) -> any ItemListUseCaseProtocol
+    @MainActor
+    func makeItemListViewModel(useCase: any ItemListUseCaseProtocol) -> ItemListViewModel
 }
 
-final class CatalogFactory: CatalogFactoryProtocol {
-    private let storage: any StorageProtocol<Item>
-    private let download: URLDownloadManagerProtocol
-
-    init(storage: any StorageProtocol<Item>, download: URLDownloadManagerProtocol) {
-        self.storage = storage
-        self.download = download
+final class AppFactory: AppFactoryProtocol {
+    func createStorage(context: ModelContext) -> any StorageProtocol<Item> {
+        SwiftDataStorageManager<Item>(context: context)
     }
 
-    func makeItemListViewModel() -> ItemListViewModel {
-        let useCase = ItemListUseCase(storage: storage, download: download)
-        return ItemListViewModel(useCase: useCase)
+    func createDownloadManager() -> any URLDownloadManagerProtocol {
+        URLDownloadManager()
+    }
+
+    func createItemListUseCase(
+        storage: any StorageProtocol<Item>,
+        download: any URLDownloadManagerProtocol
+    ) -> any ItemListUseCaseProtocol {
+        ItemListUseCase(storage: storage, download: download)
+    }
+
+    @MainActor
+    func makeItemListViewModel(useCase: any ItemListUseCaseProtocol) -> ItemListViewModel {
+        ItemListViewModel(useCase: useCase)
     }
 }
 ```
 
-## 6. App
+## 6. App (composition and sharing)
+
+`App` owns the graph. Container setup remains a placeholder in this abbreviated example.
 
 ```swift
 @main
+@MainActor
 struct MyApp: App {
-    private let catalogFactory: CatalogFactoryProtocol
+    private let modelContainer: ModelContainer
+    private let itemListViewModel: ItemListViewModel
 
     init() {
-        // wire storage + download, then factory
-        catalogFactory = CatalogFactory(storage: ..., download: ...)
+        let factory: any AppFactoryProtocol = AppFactory()
+        // Configure the container and startup error handling for your app.
+        let container = ... // ModelContainer configured for Item
+        modelContainer = container
+
+        // App creates shared dependencies once and passes them to consumers.
+        let storage = factory.createStorage(context: container.mainContext)
+        let download = factory.createDownloadManager()
+        let useCase = factory.createItemListUseCase(storage: storage, download: download)
+        itemListViewModel = factory.makeItemListViewModel(useCase: useCase)
     }
 
     var body: some Scene {
         WindowGroup {
-            ItemListView(viewModel: catalogFactory.makeItemListViewModel())
+            ItemListView(viewModel: itemListViewModel)
         }
     }
 }

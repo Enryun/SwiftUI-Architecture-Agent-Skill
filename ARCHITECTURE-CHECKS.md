@@ -6,7 +6,7 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 | Layer | May do | Must not do |
 |-------|--------|-------------|
-| **Factory** | Build manager implementations; availability/config when choosing impls; compose UseCase → ViewModel (or full feature graph) for `App` | Business logic; runtime feature behavior |
+| **Factory** | Create one Manager, UseCase, or ViewModel per method using supplied dependencies; select implementations | Business logic; hidden feature/application graphs; ownership of shared services |
 | **Manager (Common)** | Reusable infra: logging, navigation, networking, storage | Feature-specific business rules |
 | **Manager (Feature)** | App-specific system APIs (camera, files, ML, etc.) | UI state; orchestration across features |
 | **UseCase** | Business logic; async orchestration; call manager protocols | Touch SwiftUI; depend on ViewModels |
@@ -17,10 +17,10 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 | Check | Rule |
 |-------|------|
-| Construction | `App` / Factory wire Manager, UseCase, ViewModel (Factory optional for simple features) |
+| Construction | `App` composes and shares instances; factories create individual dependencies |
 | Runtime direction | View → ViewModel → UseCase → Manager only (no upward deps) |
 | Protocols | Depend on protocol types in initializers, not concrete types |
-| Injection | Pass dependencies through `init`; composition root in `App` / factories |
+| Injection | Pass dependencies through `init`; composition root in `App` |
 | Circles | No upward references between layers |
 
 ## ViewModel
@@ -42,13 +42,13 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 ## New feature checklist
 
-- [ ] Factory (if impl selection / availability **or** feature assembly for `App`; else wire in `App`)
+- [ ] Reuse appropriately scoped factories; each creation method accepts dependencies and creates one object
 - [ ] Manager protocol + implementation (if new infrastructure)
 - [ ] `[Feature]UseCaseProtocol` + `[Feature]UseCase`
 - [ ] `[Feature]ViewModel` + `ViewState`
 - [ ] `[Feature]View`
 - [ ] Models under feature `Model/` or manager `Model/`
-- [ ] Wire in `App` or factory (composition root)
+- [ ] Wire in `App` (composition root); create shared managers once and reuse them
 - [ ] Reusable UI → `Component/` only when shared
 
 ## Anti-patterns

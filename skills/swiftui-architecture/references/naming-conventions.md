@@ -4,8 +4,8 @@
 
 | Kind | Pattern | Example |
 |------|---------|---------|
-| Factory | `[Domain]Factory` | `AuthFactory` |
-| Factory protocol | `[Domain]FactoryProtocol` | `AuthFactoryProtocol` |
+| Factory | `Factory`, `AppFactory`, or `[Domain]Factory` | `CatalogFactory` |
+| Factory protocol | Matching factory name + `Protocol` | `CatalogFactoryProtocol` |
 | Manager | `[Domain]Manager` | `FileSystemManager` |
 | Manager protocol | `[Domain]Protocol` or `[Domain]Operations` | `FileSystemOperations` |
 | Use case protocol | `[Feature]UseCaseProtocol` | `ItemListUseCaseProtocol` |

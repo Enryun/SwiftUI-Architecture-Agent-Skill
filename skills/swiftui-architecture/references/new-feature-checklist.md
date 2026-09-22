@@ -10,16 +10,15 @@ Use when adding `[Feature]` to an existing SwiftUI app.
 - [ ] `ViewState` cases
 - [ ] Navigation routes (if any)
 
-## 2. Factory (if needed)
+## 2. Factory
 
-Add when you need implementation selection **or** feature assembly for `App`. Skip if wiring once in `App` is enough.
+Reuse an existing factory; add a creation method only when a new dependency must be constructed. Split factories only when current domain/platform boundaries justify it.
 
-- [ ] `[Domain]FactoryProtocol`
-- [ ] `[Domain]Factory` implementation
-- [ ] Optional `Model/` for config/API enum
-- [ ] `create…()` methods returning **manager protocols** (availability/config selection **only** here)
-- [ ] Optional `make[Feature]ViewModel()` composing UseCase + ViewModel
-- [ ] No business rules in factory methods
+- [ ] Appropriately scoped factory protocol + implementation (`Factory`, `AppFactory`, or `[Domain]Factory`)
+- [ ] Each method creates one Manager, UseCase, or ViewModel
+- [ ] Required dependencies supplied as arguments by `App`
+- [ ] Implementation selection (availability/config) stays in the factory
+- [ ] No business rules or hidden feature/application graph construction
 
 ## 3. Manager (if needed)
 
@@ -57,7 +56,8 @@ Add when you need implementation selection **or** feature assembly for `App`. Sk
 
 ## 8. Composition
 
-- [ ] Wire in `App` or factory `make[Feature]ViewModel()`
+- [ ] Wire individual objects in `App` through factories
+- [ ] Create shared managers once in `App` and reuse those instances
 - [ ] Navigation: `NavigationManager<FeatureRoute>` if using stack routes
 
 ## 9. Optional

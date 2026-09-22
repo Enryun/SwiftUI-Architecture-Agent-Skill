@@ -2,49 +2,42 @@
 
 ## Factory
 
-**Purpose:** **Dependency construction and composition** at the edge of the app — not a runtime layer on every call.
-
-Factories handle two related jobs:
-
-1. **Manager construction** — build and return manager **protocol** types; choose implementations using availability, configuration, or platform when needed.
-2. **Feature composition** — optionally assemble UseCase → ViewModel (or a full feature graph) so `App` only holds factories and root views.
+**Purpose:** Create individual dependencies through factories. `App` is the composition root and owns sharing and lifetimes.
 
 **Rules**
 
-- Protocol-first: `[Domain]FactoryProtocol`
-- No business logic — creation and wiring only (no pricing rules, validation policy, etc.)
-- May detect API/OS availability before returning a manager
-- Keep `App` small by delegating construction here
-- Factories **do not replace** Manager/UseCase/ViewModel — they **instantiate** them
-
-**When to add a Factory**
-
-- Multiple implementations of a manager (API variants, OS version, user setting)
-- Non-trivial wiring for a feature (several managers → use case → view model)
-- You want `App` to call `factory.makeItemListViewModel()` instead of inline `init` chains
-
-**When to skip Factory**
-
-- One implementation per protocol; wire once in `App`
-- Small feature with no implementation selection
+- Define factory protocols and implementations. Start with one factory; split when unrelated domain responsibilities accumulate or platform/target boundaries require separate creation code. Do not create a factory per feature without a current need.
+- Each method creates one Manager, UseCase, or ViewModel and accepts its required dependencies as arguments.
+- May select a platform implementation based on availability or configuration.
+- No business logic, service lookup, or hidden construction of a feature/application graph.
+- Do not store or recreate shared managers inside feature builders. `App` creates each shared manager once and passes that instance to its consumers.
+- Do not add `makeEntireFeature()` or `makeApp()` methods. Multiple factories must follow the same individual-creation boundary.
+- Mark ViewModel creation requirements and implementations `@MainActor` to match the objects they construct.
 
 **Structure**
 
+A small app can use `Factory` or `AppFactory`; these names are interchangeable conventions. For example:
+
 ```
-Factory/[Domain]/
-├── Interface/[Domain]FactoryProtocol.swift
-├── Implementation/[Domain]Factory.swift
-└── Model/                    # optional (e.g. API enum, config)
+Factory/
+├── Interface/AppFactoryProtocol.swift
+└── Implementation/AppFactory.swift
 ```
+
+For a larger app, group focused factories under `Factory/[Domain]/Interface/` and `Implementation/`, such as `AccountFactory` or `CatalogFactory`. `App` supplies any shared dependencies across these factories.
 
 **Example responsibilities**
 
 ```swift
-protocol AuthFactoryProtocol {
-    func createSessionManager() async -> SessionManagerProtocol
-    func makeSignInViewModel() -> SignInViewModel
+protocol AppFactoryProtocol {
+    func createSessionManager() -> any SessionManagerProtocol
+    func createSignInUseCase(session: any SessionManagerProtocol) -> any SignInUseCaseProtocol
+    @MainActor
+    func makeSignInViewModel(useCase: any SignInUseCaseProtocol) -> SignInViewModel
 }
 ```
+
+`App` calls these methods in dependency order, supplies existing instances, and injects the resulting ViewModel into the View. See [Dependency flow](dependency-flow.md).
 
 ## Manager
 
@@ -88,6 +81,8 @@ Manager/.../[Domain]/
 - May expose `AsyncStream` or publishers for progress
 
 **Structure**
+
+A small app can use `Factory` or `AppFactory`; these names are interchangeable conventions. For example:
 
 ```
 UseCase/[Domain]/[Feature]/

@@ -73,11 +73,18 @@ func createUseCase() -> ItemListUseCase {
     ...
 }
 
-// GOOD — factory only constructs
-func createUseCase() -> ItemListUseCaseProtocol {
-    ItemListUseCase(storage: createStorage(), download: createDownload())
+// GOOD — App supplies dependencies; factory creates one object
+func createUseCase(
+    storage: any StorageProtocol<Item>,
+    download: any URLDownloadManagerProtocol
+) -> any ItemListUseCaseProtocol {
+    ItemListUseCase(storage: storage, download: download)
 }
 ```
+
+## Hidden graph construction in Factory
+
+Do not add methods that construct managers, UseCases, and ViewModels together. Use individual creation methods, whether there is one factory or several focused factories. `App` calls them in order and reuses shared manager instances.
 
 ## God UseCase
 
