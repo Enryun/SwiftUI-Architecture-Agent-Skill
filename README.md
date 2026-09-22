@@ -2,7 +2,9 @@
 
 Open-source Agent Skills for structuring **SwiftUI iOS/macOS apps** with a layered stack:
 
-**Factory → Manager → UseCase → ViewModel → View**
+**Runtime when those layers are present: View → ViewModel → UseCase → Manager**
+
+**Construction: App composes and shares dependencies; factories create individual instances.**
 
 Protocol-first dependency injection, feature-based folders, and a recommend-first scaffold workflow for new projects and new features.
 
@@ -11,6 +13,8 @@ Protocol-first dependency injection, feature-based folders, and a recommend-firs
 - Starting a new SwiftUI app with multiple features
 - Adding a feature module (screen + business logic + infrastructure)
 - Reviewing layer boundaries or dependency direction
+
+For features with real business rules, prefer `View → ViewModel → focused UseCase(s)`. When a UseCase crosses an infrastructure boundary, it depends on a narrow Manager protocol; features without infrastructure do not need a Manager layer. Add factories only when construction complexity warrants them. Simple presentation-only screens may remain simple MVVM.
 
 ## When not to use
 
@@ -56,7 +60,7 @@ SwiftUI-Architecture/
 ├── ARCHITECTURE-CHECKS.md     # Human-readable index of rules
 ├── skills/swiftui-architecture/
 │   ├── SKILL.md               # Agent entrypoint
-│   └── references/            # Detailed specs
+│   └── references/            # Detailed specs and complete example
 └── templates/
     └── architecture.mdc       # Optional Cursor rule template
 ```
@@ -71,16 +75,15 @@ See [`skills/swiftui-architecture/SKILL.md`](skills/swiftui-architecture/SKILL.m
 
 ## Architecture at a glance
 
-**Construction** (what `App` / Factory wire at startup):
+**One main feature View → exactly one owning ViewModel.** When business operations need a separate boundary, that ViewModel may use one or more focused UseCases; a simple feature may use none.
+
+**Construction** (`App` owns composition and shared lifetimes):
 
 ```
 App
-  ↓
-Factory — dependency construction & composition
-         • builds manager implementations (optional availability/config)
-         • may assemble UseCase → ViewModel for a feature
-  ↓
-Manager / UseCase / ViewModel (wired instances)
+  ├─ Factory.createManager(...) → manager
+  ├─ Factory.createUseCase(manager: manager) → useCase
+  └─ Factory.makeViewModel(useCase: useCase) → viewModel
 ```
 
 **Runtime** (each user action):
@@ -91,13 +94,17 @@ View → ViewModel → UseCase → Manager
 
 | Layer | Role |
 |-------|------|
-| **Factory** | Composition root: create managers; optionally wire feature graphs so `App` stays thin. Not a runtime hop on every call. |
+| **Factory** | Create one Manager, UseCase, or ViewModel per method from supplied dependencies; select platform implementations when needed. |
 | **Manager** | Infrastructure (Common + Feature), protocol-based |
-| **UseCase** | Business logic; orchestrates manager protocols |
-| **ViewModel** | `@MainActor` `@Observable`, `ViewState` enum |
-| **View** | Presentation only |
+| **UseCase** | Focused business responsibility; calls manager protocols directly, never other UseCases |
+| **ViewModel** | `@MainActor` `@Observable`; optional `ViewState`; focused UseCase protocols when needed, no other ViewModels |
+| **Feature View** | Presents one feature through its one owning ViewModel |
+| **Composition View** | Assembles independent feature views using child ViewModels supplied by `App` |
+| **Component** | Visual UI receiving values, bindings, and action closures |
 
-Factory is **optional** when there is a single manager implementation and you wire directly in `App`.
+`AppFactory` above is an example name. Start with one factory and split into focused domain/platform factories when current complexity warrants it. `App` wires the graph and reuses shared manager instances. Factory methods must not hide complete feature/application graphs or contain business logic.
+
+Navigation is presentation state scoped to each independent stack/window. Views may access it as an explicit exception to infrastructure-manager boundaries; ViewModels and UseCases may not. See [navigation and lifetimes](skills/swiftui-architecture/references/navigation.md).
 
 Details: [`ARCHITECTURE-CHECKS.md`](ARCHITECTURE-CHECKS.md) and [`skills/swiftui-architecture/references/`](skills/swiftui-architecture/references/).
 

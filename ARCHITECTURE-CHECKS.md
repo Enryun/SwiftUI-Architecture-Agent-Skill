@@ -4,51 +4,73 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 
 ## Layer responsibilities
 
+The recommended feature shape is `View → ViewModel → focused UseCase(s)` when business rules exist. When a UseCase crosses an infrastructure boundary, a narrow Manager protocol is required at that boundary. Features without infrastructure do not need a Manager layer; factories are added only when their responsibilities are present. Simple presentation-only screens may use View + ViewModel.
+
 | Layer | May do | Must not do |
 |-------|--------|-------------|
-| **Factory** | Build manager implementations; availability/config when choosing impls; compose UseCase → ViewModel (or full feature graph) for `App` | Business logic; runtime feature behavior |
-| **Manager (Common)** | Reusable infra: logging, navigation, networking, storage | Feature-specific business rules |
+| **Factory** | Create one Manager, UseCase, or ViewModel per method using supplied dependencies; select implementations | Business logic; hidden feature/application graphs; ownership of shared services |
+| **Manager (Common)** | Reusable infra: logging, networking, storage | Feature-specific business rules |
+| **Navigation (presentation)** | Scoped path state and navigation operations; accessible by Views | Business operations; dependencies from ViewModels/UseCases |
 | **Manager (Feature)** | App-specific system APIs (camera, files, ML, etc.) | UI state; orchestration across features |
-| **UseCase** | Business logic; async orchestration; call manager protocols | Touch SwiftUI; depend on ViewModels |
-| **ViewModel** | UI state; `ViewState` enum; call use case protocols | Access managers directly |
-| **View** | Layout; forward actions to ViewModel | Business logic; UseCase/Manager access |
+| **UseCase** | Focused business logic when a separate boundary is useful; orchestrate manager protocols | Touch SwiftUI; depend on ViewModels or other UseCases |
+| **ViewModel** | UI state; optional `ViewState` enum; call focused UseCase protocols when present | Depend on or call Managers or other ViewModels |
+| **Feature View** | Present one feature; receive one owning ViewModel plus values, bindings, closures | Receive unrelated feature ViewModels; business operations; service creation |
+| **Composition View** | Assemble feature views using child ViewModels from `App`; coordinate presentation | Call UseCases; create business services; duplicate feature business state |
+| **Component** | Render values; use bindings and action closures; own local visual state | Depend on feature ViewModels, UseCases, or Managers |
 
 ## Dependency flow
 
 | Check | Rule |
 |-------|------|
-| Construction | `App` / Factory wire Manager, UseCase, ViewModel (Factory optional for simple features) |
+| Construction | `App` composes and shares instances; factories create individual dependencies |
 | Runtime direction | View → ViewModel → UseCase → Manager only (no upward deps) |
 | Protocols | Depend on protocol types in initializers, not concrete types |
-| Injection | Pass dependencies through `init`; composition root in `App` / factories |
+| Injection | Pass dependencies through `init`; composition root in `App` |
 | Circles | No upward references between layers |
 
+## Navigation and lifetimes
+
+- Views own navigation and may access scoped navigation state as a presentation-only exception; ViewModels and UseCases may not.
+- ViewModels expose operation results/UI state, not routes, navigation commands, or navigation callbacks. Views interpret outcomes for presentation.
+- Paths belong to independent stacks/windows, not automatically the whole app. Scene/root composition may own local navigation state.
+- Routes carry identifiers or values, never ViewModels/services. Register only destinations supported by that stack.
+- `App` defines shared service lifetimes; choose feature/destination lifetimes deliberately.
+
+Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/references/navigation.md).
+
 ## ViewModel
+
+**Exactly one owning ViewModel per feature View does not restrict that ViewModel to one UseCase.** Inject multiple focused UseCase protocols when the feature needs them.
 
 | Check | Rule |
 |-------|------|
 | Isolation | `@MainActor` on ViewModels |
 | Observation | `@Observable` (Swift Observation) |
-| State | Nested `ViewState` enum with associated values, not many boolean flags |
-| Dependencies | Primary dependency is one use case protocol |
+| State | Use a nested `ViewState` enum when mutually exclusive modes benefit from it; independent state may remain separate |
+| Dependencies | One or more focused UseCase protocols when needed; no other ViewModels |
 
 ## View
 
 | Check | Rule |
 |-------|------|
-| Dependencies | ViewModel only |
+| Feature dependencies | Exactly one owning feature ViewModel; values, bindings, closures allowed |
+| Composition dependencies | Multiple child ViewModels allowed for independent feature views |
+| Component inputs | Values, bindings, and action closures; no feature ViewModels |
 | Async | `Task { await viewModel.method() }` from UI actions |
-| Logic | No use case or manager calls in `View` |
+| Logic | No UseCase calls, business operations, or service creation in views |
+| Closures | Small, purposeful UI event/content APIs; no hidden forbidden dependencies, duplicated ViewModel actions, or unnecessary forwarding chains |
 
 ## New feature checklist
 
-- [ ] Factory (if impl selection / availability **or** feature assembly for `App`; else wire in `App`)
+- [ ] Reuse appropriately scoped factories; each creation method accepts dependencies and creates one object
 - [ ] Manager protocol + implementation (if new infrastructure)
-- [ ] `[Feature]UseCaseProtocol` + `[Feature]UseCase`
-- [ ] `[Feature]ViewModel` + `ViewState`
-- [ ] `[Feature]View`
-- [ ] Models under feature `Model/` or manager `Model/`
-- [ ] Wire in `App` or factory (composition root)
+- [ ] Focused UseCase protocol/implementation pairs when business boundaries require them; no UseCase → UseCase dependencies
+- [ ] `[Feature]ViewModel`; add `ViewState` when it clarifies state
+- [ ] `[Feature]View` receives exactly one owning ViewModel
+- [ ] Composition views assemble independent features without an aggregate ViewModel
+- [ ] Model responsibilities considered: domain, presentation, persistence; no mandatory three-type structure or folder migration
+- [ ] Reuse values; separate representations only for a concrete boundary requirement
+- [ ] Wire in `App` (composition root); create shared managers once and reuse them
 - [ ] Reusable UI → `Component/` only when shared
 
 ## Anti-patterns
@@ -56,10 +78,21 @@ Human-readable index of what the **swiftui-architecture** skill enforces. Detail
 | Anti-pattern | Fix |
 |--------------|-----|
 | ViewModel holds `FileSystemManager()` | Inject `ItemListUseCaseProtocol` |
+| ViewModel depends on another ViewModel | Inject the relevant focused UseCase protocols |
+| UseCase depends on another UseCase | Keep the business operation in its owning UseCase and inject manager protocols directly |
 | View calls use case | Call `viewModel.load()` |
 | `init(fileSystem: FileSystemManager)` | `init(fileSystem: FileSystemOperations)` |
 | Business logic in `View.body` | Move to UseCase / ViewModel |
 | `@MainActor` on everything to silence errors | Isolate UI vs actors intentionally |
+
+## Review workflow
+
+- Inspect existing code and trace dependencies before recommending structural changes.
+- Cite files and symbols for findings when possible.
+- Separate required corrections, recommendations, and contextual options.
+- Do not scaffold, restructure, add tests, or run builds during a review unless separately requested.
+- Prefer the smallest correction that restores ownership or dependency direction.
+- Comments should explain non-obvious intent, invariants, ownership, platform workarounds, or concurrency constraints; remove obvious narration when editing code.
 
 ## Concurrency (summary)
 

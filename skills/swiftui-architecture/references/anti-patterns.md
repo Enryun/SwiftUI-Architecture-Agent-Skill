@@ -1,5 +1,20 @@
 # Anti-patterns
 
+## Obvious descriptive comments
+
+Do not add comments that translate clear code into English or label self-explanatory sections:
+
+```swift
+// BAD — repeats the declaration
+let settingsViewModel = SettingsViewModel(useCase: useCase)
+
+// GOOD — explains a non-obvious lifetime decision
+// Keep this instance shared with the settings tab so both paths observe the same draft.
+let settingsViewModel = SettingsViewModel(useCase: useCase)
+```
+
+Useful comments explain why the code is constrained: an ownership or isolation invariant, a platform workaround, a public API contract, or a follow-up requirement. Prefer naming and structure for ordinary explanation. Do not remove a comment merely because it is short; remove it when it adds no information beyond the code.
+
 ## ViewModel → Manager directly
 
 ```swift
@@ -73,15 +88,42 @@ func createUseCase() -> ItemListUseCase {
     ...
 }
 
-// GOOD — factory only constructs
-func createUseCase() -> ItemListUseCaseProtocol {
-    ItemListUseCase(storage: createStorage(), download: createDownload())
+// GOOD — App supplies dependencies; factory creates one object
+func createUseCase(
+    storage: any StorageProtocol<Item>,
+    download: any URLDownloadManagerProtocol
+) -> any ItemListUseCaseProtocol {
+    ItemListUseCase(storage: storage, download: download)
 }
 ```
 
+## Hidden graph construction in Factory
+
+Do not add methods that construct managers, UseCases, and ViewModels together. Use individual creation methods, whether there is one factory or several focused factories. `App` calls them in order and reuses shared manager instances.
+
+## ViewModel → ViewModel
+
+Do not inject `PurchaseViewModel` into `ProfileViewModel` to reuse purchase behavior. Inject `PurchaseUseCaseProtocol` alongside `ProfileUseCaseProtocol`; each ViewModel owns its own presentation state.
+
+## Aggregate ViewModel used only as a container
+
+Do not add `AccountViewModel` merely to hold `ProfileViewModel` and `PurchaseViewModel` or mirror their state. Let a composition view receive the existing child ViewModels from `App` and assemble their feature views. Each feature View still receives only its own ViewModel.
+
+Do not pass both ViewModels into a reusable row or button. Pass the values, bindings, and action closures that visual component needs.
+
+## Closure overuse and hidden dependencies
+
+Do not inject a collection of business-operation callbacks into a feature View alongside its ViewModel. Keep feature actions on that ViewModel. A callback that captures a Manager or UseCase to perform the feature's business work still bypasses the intended dependency flow.
+
+Avoid chains of containers that merely forward callbacks. Reassess composition and responsibility before adding more callbacks or a generic dispatcher. See [closure boundaries](layer-overview.md#closure-boundaries).
+
+## UseCase → UseCase
+
+Do not inject `PurchaseUseCaseProtocol` into `ProfileUseCase` merely to forward purchase actions. Let the ViewModel depend on both focused protocols. If a single business operation requires several infrastructure steps, its owning UseCase calls the required manager protocols directly; do not move that business workflow into the ViewModel.
+
 ## God UseCase
 
-One use case doing unrelated features → split by `[Feature]` under `UseCase/[Domain]/`.
+One UseCase doing unrelated business responsibilities → split into focused UseCases under `UseCase/[Domain]/`. Inject the relevant protocols into the ViewModel rather than creating a wrapper UseCase to hide them.
 
 ## Leaking SwiftUI into UseCase
 

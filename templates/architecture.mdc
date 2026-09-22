@@ -9,21 +9,44 @@ Use the **swiftui-architecture** skill when scaffolding features or reviewing st
 
 ## Dependency flow
 
-Construction: `App` / Factory wire Manager, UseCase, ViewModel (Factory optional).
+Construction: `App` wires dependencies and owns shared lifetimes. Factories create individual instances. Start with one and split by domain/platform when current complexity warrants it; names and count are flexible.
 
 Runtime: `View → ViewModel → UseCase → Manager` (unidirectional).
 
-Factory = build managers (incl. availability/config) + optional `make[Feature]ViewModel()` — not business logic.
+Each factory method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Platform implementation selection is allowed. No business logic or hidden feature/application graphs.
 
 ## Rules
 
-- ViewModels depend on **use case protocols** only — never managers.
-- Views depend on **view models** only — never use cases or managers.
-- Use **protocol types** in `init` parameters.
-- ViewModels: `@Observable`, `@MainActor`, nested `ViewState` enum.
+**One main feature View → exactly one owning ViewModel.** When business operations need a separate boundary, that ViewModel may use one or more focused UseCase protocols; a simple feature may use none.
+
+Prefer the UseCase boundary when a feature has real business rules or orchestration. When a UseCase crosses an infrastructure boundary, it must depend on a narrow Manager protocol. Features without infrastructure do not need a Manager layer; add factories only when construction complexity justifies them. Keep presentation-only screens simple.
+
+- ViewModels depend on focused UseCase protocols when needed — never managers or other ViewModels.
+- Each UseCase owns one focused business responsibility and depends directly on manager protocols, never another UseCase.
+- Each feature View receives exactly one owning feature ViewModel; values, bindings, and closures are also allowed.
+- Composition views may receive multiple child ViewModels supplied by `App` to assemble independent features. Do not add aggregate ViewModels merely to contain child ViewModels.
+- Reusable visual components receive values, bindings, and action closures, not feature ViewModels.
+- Views do not call UseCases, perform business operations, or create business services.
+- ViewModels expose operation results and UI state, not navigation routes, commands, or callbacks. Views decide how to navigate from those outcomes.
+- Navigation is presentation state: Views may access the scoped navigation environment; ViewModels/UseCases may not. Scene/root composition may own local navigation state. Scope paths per independent stack/window and use identifier/value routes, never ViewModels or services.
+- Use closures for focused component actions, presentation events, and content composition. Avoid excessive callback APIs, redundant forwarding chains, and closures that conceal forbidden dependencies or duplicate the owning ViewModel's business actions.
+
+## Review mode
+
+When reviewing an existing project, inspect and trace actual dependencies first. Report file-backed findings as required corrections, recommendations, or contextual options. Do not scaffold, restructure, add tests, or run builds unless separately requested. Prefer the smallest correction, and preserve implementation scope already approved by the user.
+
+## Code quality
+
+Avoid obvious descriptive comments that repeat what names and code already say. Keep comments that explain why, an invariant, an ownership/concurrency constraint, a platform workaround, or a public API contract.
+
+## Additional rules
+
+- Use **protocol types** at replaceable dependency boundaries.
+- ViewModels: `@Observable`, `@MainActor`; use a nested `ViewState` when mutually exclusive modes benefit from it.
+- Model categories and locations are guidance, not a mandatory three-type structure. Reuse plain domain values across layers. Separate storage/transport/UI models only when requirements differ; keep persistence records and contexts inside integrations and expose values or identifiers to business layers.
 
 ## New feature
 
 Propose folder tree and protocols first; scaffold files after approval.
 
-Full spec: install `swiftui-architecture` skill from [SwiftUI-Architecture](https://github.com/your-org/SwiftUI-Architecture) or project `.cursor/skills/`.
+Full spec: install `swiftui-architecture` from [SwiftUI-Architecture-Agent-Skill](https://github.com/Enryun/SwiftUI-Architecture-Agent-Skill) or project `.cursor/skills/`.

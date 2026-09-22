@@ -20,24 +20,55 @@ Use this skill for **new SwiftUI apps**, **new features**, and **architecture re
 
 Use the smallest structure that keeps responsibilities clear.
 
+The preferred default for a feature with business rules is `View → ViewModel → focused UseCase(s)`. When a UseCase crosses an infrastructure boundary—such as persistence, networking, files, StoreKit, analytics, or device APIs—it depends on a narrow Manager protocol. Features without infrastructure do not need a Manager layer. Add a Factory when construction or implementation selection is genuinely complex. Use simple `View → ViewModel` for screens whose behavior is only local presentation state; do not add empty layers to match the default.
+
 | Situation | Recommended |
 |----------|-------------|
 | **Small screen** (simple UI state, no real business rules) | Simple MVVM: View + ViewModel |
 | **Medium feature** (business logic growing, rules, orchestration) | View + ViewModel + UseCase |
 | **Feature with infra** (API/storage/filesystem/device) | Manager protocol(s) + UseCase + ViewModel |
-| **Multiple implementations / platform differences** (availability/config selection, complex wiring) | Add a Factory for construction + composition |
+| **Multiple implementations / platform differences** (availability/config selection, complex wiring) | Select implementations in focused factories; compose dependencies in `App` |
+
+## Core feature boundary
+
+**One main feature View → exactly one owning ViewModel.** When the feature has business operations, that ViewModel may depend on one or more focused UseCase protocols.
+
+The one-ViewModel rule does **not** mean one UseCase. When the same feature needs profile, purchase, or preference operations, inject the relevant focused UseCase protocols into its existing ViewModel. Do not add another ViewModel or merge unrelated UseCases just to serve that feature. A simple screen may have no UseCase at all.
+
+Closures support component actions, presentation events, and content composition. Keep callback APIs small and purposeful; do not use closures to conceal forbidden dependencies, move business workflows into Views, or forward actions through layers of otherwise unnecessary containers. See [closure boundaries](references/layer-overview.md#closure-boundaries).
 
 ## Non-negotiable rules
 
 1. **Unidirectional dependencies:**
-   - Runtime flow is `View → ViewModel → UseCase → Manager`.
-   - `App`/Factory wire dependencies at construction (Factory optional when wiring in `App` is enough).
-2. **Protocol-first:** Initializers take protocol types, not concrete managers/use cases.
-3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum.
-4. **ViewModels never access managers** — only use case protocols.
-5. **Views never access use cases or managers** — only the view model.
-6. **Factories wire, they don't decide business outcomes** — construction and composition only; no business logic.
+   - Runtime flow is `View → ViewModel → UseCase → Manager` when those layers are present; simple presentation-only features may stop at ViewModel.
+   - `App` wires dependencies and owns shared lifetimes; factories create individual instances from supplied dependencies.
+2. **Protocol-first at boundaries:** Use protocols for replaceable infrastructure and business dependencies. A trivial private implementation does not need a protocol solely to satisfy this guide.
+3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum when mutually exclusive screen modes make it clearer. Independent state such as drafts, selection, sheets, and alerts may remain separate properties.
+4. **ViewModels depend on focused UseCase protocols when business operations require them** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
+5. **Views have explicit roles** — each feature View receives exactly one owning feature ViewModel. Composition views may receive multiple child ViewModels to assemble independent features using instances supplied by `App`. Reusable visual components receive values, bindings, and action closures. Views do not call UseCases, perform business operations, or create business services. Scoped navigation state is a presentation exception: feature/composition Views may access it; ViewModels and UseCases may not. ViewModels expose operation results and UI state, not routes or navigation commands; Views decide how to navigate. See [navigation and lifetimes](references/navigation.md).
+6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
+
+8. **Comments explain intent, not syntax:** Do not add comments that restate an obvious declaration, method name, property name, or control flow. Add comments when they document a non-obvious invariant, ownership decision, platform workaround, concurrency constraint, public API contract, or follow-up requirement. Prefer clear names and structure over explanatory narration.
+
+## Architecture review workflow
+
+Use this mode when the user asks to review, audit, inspect, or give feedback on an existing project.
+
+1. Inspect the existing folder structure, target boundaries, representative Views, ViewModels, UseCases, Managers, factories, and navigation wiring before recommending changes.
+2. Trace actual dependencies from the composition root through a feature. Do not infer a violation from a filename or folder name alone.
+3. Report findings with file paths and symbols when possible. Separate required corrections, recommendations, and contextual options.
+4. Explain the smallest change that would resolve each required correction and identify any affected lifetime or isolation boundary.
+5. Do not create files, restructure the project, add abstractions, run tests, or run builds during a review unless the user separately requests implementation or verification.
+6. End with a prioritized list of reviewable changes. If the user approves a specific item, implement only that item and preserve earlier approved decisions.
+
+Review mode is evidence-first: existing code and the user's stated project contract take precedence over generic examples in this skill.
+
+During review, flag comments that merely narrate obvious code and remove them only when implementation is requested. Preserve comments that explain why the code must remain unusual.
+
+## Model ownership
+
+Treat domain, presentation, and persistence models as suggested responsibility categories, not a mandatory three-type structure. Reuse plain domain values across Managers, UseCases, ViewModels, and Views when their meaning matches. Separate persistence/transport/UI representations only when their requirements differ. Keep framework-managed records and contexts inside their owning integration; business-facing APIs expose domain values or identifiers. See [model ownership](references/models.md) for placement and conversion rules.
 
 ## Scaffold workflow
 
@@ -46,10 +77,10 @@ Use the smallest structure that keeps responsibilities clear.
 1. Confirm feature name and domain (e.g. `Catalog` / `ItemList`).
 2. List files to add under:
    - `Pages/`
-   - `Factory/` (optional)
-   - `Manager/`
-   - `UseCase/`
-   - `Component/`
+   - `Factory/` (only if creation/selection complexity warrants it)
+   - `Manager/` (only if infrastructure is needed)
+   - `UseCase/` (only if business operations need a separate boundary)
+   - `Component/` (only when UI is shared)
    - `Constants/`
    - `Utility/`
 
@@ -57,53 +88,55 @@ Use the smallest structure that keeps responsibilities clear.
 3. Output:
    - Folder tree
    - Protocol names per layer
-   - Dependency graph (what `App` or factory wires)
-   - `ViewState` cases for the ViewModel
-4. **Stop** and ask for approval.
+   - Dependency graph for the layers that actually exist
+   - `ViewState` cases only if an enum improves the feature's state model
+4. **Stop** and ask for approval unless the user has already approved this implementation scope in the current conversation.
 
 ### Phase 2 — Implement (after approval)
 
 5. Create protocols before implementations.
-6. Wire composition root in `App` or domain factory.
+6. Wire the composition root in `App`, calling factories for individual instances.
 7. ViewModel + View last.
 8. Extract shared UI to `Component/` only when used by 2+ features.
 
 ## New feature checklist (short)
 
-- [ ] Factory — if selecting manager implementations (availability/config)
-      **or** assembling UseCase + ViewModel for `App`
-      (skip if wiring once in `App` is enough)
-- [ ] Manager — `Interface/` + `Implementation/` (+ `Model/` if needed)
-- [ ] UseCase — `[Feature]UseCaseProtocol` + `[Feature]UseCase`
-- [ ] ViewModel — `[Feature]ViewModel` + `ViewState`
-- [ ] View — `[Feature]View`
-- [ ] DI wired at App/factory
+- [ ] Factory — only if creation/selection complexity warrants it; reuse existing factories
+- [ ] Manager — only if the feature needs infrastructure; use a protocol when replaceability/test seams matter
+- [ ] UseCases — only for focused business operations that need a separate boundary
+- [ ] ViewModel — `[Feature]ViewModel`; add `ViewState` when mutually exclusive modes benefit from it
+- [ ] View — `[Feature]View` receives one owning ViewModel; compose independent features without an aggregate ViewModel
+- [ ] DI wired in `App`; shared manager instances created once and reused
 
 ## Layer quick reference
 
 | Layer | Responsibility |
 |-------|----------------|
-| Factory | Dependency construction & composition: build managers (incl. availability/config when needed); may expose `make[Feature]ViewModel()` so `App` stays thin |
-| Manager Common | Logging, navigation, networking, storage |
+| Factory | Create individual Managers, UseCases, and ViewModels from supplied dependencies. `App` composes and shares the graph |
+| Manager Common | Logging, networking, storage |
+| Navigation | Presentation state scoped to a stack/window; Views may access it, ViewModels/UseCases may not |
 | Manager Feature | App-specific system/integration APIs |
-| UseCase | Business logic; orchestrate manager protocols |
-| ViewModel | UI state, user actions → use case |
-| View | SwiftUI layout only |
+| UseCase | One focused business responsibility; orchestrate manager protocols directly, never other UseCases |
+| ViewModel | UI state, user actions → focused UseCase protocols when needed; no other ViewModels |
+| Feature View | Present one feature; forward actions to its one owning ViewModel |
+| Composition View | Assemble independent feature views; own layout and cross-feature presentation, not feature business state |
+| Component | Visual UI driven by values, bindings, and action closures |
 
 ## Testing guidance
 
-- **UseCase tests**: mock Manager protocols; verify business rules and orchestration.
-- **ViewModel tests**: mock UseCase protocol; verify `ViewState` transitions and user-intent handlers.
-- **View tests**: prefer previews and snapshot-style checks; keep Views thin and deterministic.
+- **UseCase tests**: when a UseCase exists, mock its Manager protocols and verify business rules and orchestration.
+- **ViewModel tests**: mock injected UseCase protocols when present; verify state transitions and user-intent handlers.
+- **View tests**: use previews or snapshot-style checks when they provide value; keep Views thin and deterministic.
 
 ## Migration guidance
 
 If adopting this architecture in an existing codebase:
 
 - **Existing MVVM**: introduce a UseCase when business logic grows beyond UI state shaping.
-- **ViewModel calling managers directly**: wrap manager calls behind a UseCase protocol; ViewModel depends on the UseCase only.
-- **No factories today**: add a Factory when you need implementation selection
-  (availability/config/platform) or when wiring in `App` becomes noisy.
+- **ViewModel calling managers directly**: wrap manager calls behind a UseCase protocol; ViewModel depends on the relevant UseCase protocols only.
+- **Factory migration**: keep individual creation methods in appropriately scoped factories. Move graph assembly and shared-instance ownership into `App`; replace hidden feature builders one feature at a time. Do not consolidate focused factories merely to enforce a single factory.
+
+- **ViewModel or UseCase chains**: remove ViewModel → ViewModel and UseCase → UseCase dependencies. Inject focused UseCases into the owning ViewModel; keep business workflows inside a focused UseCase operating directly on manager protocols.
 
 ## Anti-patterns (reject if suggested)
 
@@ -133,9 +166,12 @@ Read only what you need:
 
 - [Layer overview](references/layer-overview.md)
 - [Folder structure](references/folder-structure.md)
+- [Model ownership and persistence boundaries](references/models.md)
 - [Dependency flow](references/dependency-flow.md)
 - [Naming conventions](references/naming-conventions.md)
 - [New feature checklist](references/new-feature-checklist.md)
 - [Anti-patterns](references/anti-patterns.md)
+- [Navigation and dependency lifetimes](references/navigation.md)
 - [Concurrency](references/concurrency.md)
+- For deep Swift 6 concurrency diagnostics and migration, use the companion [Swift Concurrency Agent Skill](https://github.com/AvdLee/Swift-Concurrency-Agent-Skill).
 - [End-to-end example](references/examples.md)
