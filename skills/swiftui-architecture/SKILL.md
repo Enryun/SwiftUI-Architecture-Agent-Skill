@@ -49,6 +49,19 @@ Closures support component actions, presentation events, and content composition
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
 7. **Recommend-first:** Propose folder tree + types before creating files.
 
+## Architecture review workflow
+
+Use this mode when the user asks to review, audit, inspect, or give feedback on an existing project.
+
+1. Inspect the existing folder structure, target boundaries, representative Views, ViewModels, UseCases, Managers, factories, and navigation wiring before recommending changes.
+2. Trace actual dependencies from the composition root through a feature. Do not infer a violation from a filename or folder name alone.
+3. Report findings with file paths and symbols when possible. Separate required corrections, recommendations, and contextual options.
+4. Explain the smallest change that would resolve each required correction and identify any affected lifetime or isolation boundary.
+5. Do not create files, restructure the project, add abstractions, run tests, or run builds during a review unless the user separately requests implementation or verification.
+6. End with a prioritized list of reviewable changes. If the user approves a specific item, implement only that item and preserve earlier approved decisions.
+
+Review mode is evidence-first: existing code and the user's stated project contract take precedence over generic examples in this skill.
+
 ## Model ownership
 
 Treat domain, presentation, and persistence models as suggested responsibility categories, not a mandatory three-type structure. Reuse plain domain values across Managers, UseCases, ViewModels, and Views when their meaning matches. Separate persistence/transport/UI representations only when their requirements differ. Keep framework-managed records and contexts inside their owning integration; business-facing APIs expose domain values or identifiers. See [model ownership](references/models.md) for placement and conversion rules.
@@ -73,7 +86,7 @@ Treat domain, presentation, and persistence models as suggested responsibility c
    - Protocol names per layer
    - Dependency graph for the layers that actually exist
    - `ViewState` cases only if an enum improves the feature's state model
-4. **Stop** and ask for approval.
+4. **Stop** and ask for approval unless the user has already approved this implementation scope in the current conversation.
 
 ### Phase 2 — Implement (after approval)
 

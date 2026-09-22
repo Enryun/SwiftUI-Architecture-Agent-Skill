@@ -85,6 +85,14 @@ Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/refer
 | Business logic in `View.body` | Move to UseCase / ViewModel |
 | `@MainActor` on everything to silence errors | Isolate UI vs actors intentionally |
 
+## Review workflow
+
+- Inspect existing code and trace dependencies before recommending structural changes.
+- Cite files and symbols for findings when possible.
+- Separate required corrections, recommendations, and contextual options.
+- Do not scaffold, restructure, add tests, or run builds during a review unless separately requested.
+- Prefer the smallest correction that restores ownership or dependency direction.
+
 ## Concurrency (summary)
 
 | Check | Rule |
