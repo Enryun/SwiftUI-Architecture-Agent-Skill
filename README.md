@@ -97,7 +97,7 @@ View → ViewModel → UseCase → Manager
 | **Factory** | Create one Manager, UseCase, or ViewModel per method from supplied dependencies; select platform implementations when needed. |
 | **Manager** | Infrastructure (Common + Feature), protocol-based |
 | **UseCase** | Focused business responsibility; calls manager protocols directly, never other UseCases |
-| **ViewModel** | `@MainActor` `@Observable`; optional `ViewState`; focused UseCase protocols when needed, no other ViewModels |
+| **ViewModel** | `@MainActor` UI state; `@Observable` where supported or `ObservableObject` for older targets; optional `ViewState`; focused UseCase protocols when needed, no other ViewModels |
 | **Feature View** | Presents one feature through its one owning ViewModel |
 | **Composition View** | Assembles independent feature views using child ViewModels supplied by `App` |
 | **Component** | Visual UI receiving values, bindings, and action closures |
@@ -105,6 +105,8 @@ View → ViewModel → UseCase → Manager
 `AppFactory` above is an example name. Start with one factory and split into focused domain/platform factories when current complexity warrants it. `App` wires the graph and reuses shared manager instances. Factory methods must not hide complete feature/application graphs or contain business logic.
 
 Navigation is presentation state scoped to each independent stack/window. Views may access it as an explicit exception to infrastructure-manager boundaries; ViewModels and UseCases may not. See [navigation and lifetimes](skills/swiftui-architecture/references/navigation.md).
+
+Check the app's minimum OS versions and Swift toolchain before adopting example APIs. The [macOS 14+ example](skills/swiftui-architecture/references/examples.md) uses Observation; [older-OS guidance](skills/swiftui-architecture/references/observation.md) covers compatible ViewModel observation. Navigation examples also need an availability strategy on targets older than iOS 16/macOS 13.
 
 Details: [`ARCHITECTURE-CHECKS.md`](ARCHITECTURE-CHECKS.md) and [`skills/swiftui-architecture/references/`](skills/swiftui-architecture/references/).
 
