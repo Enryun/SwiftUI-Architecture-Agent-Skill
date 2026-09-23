@@ -2,12 +2,14 @@
 
 **One feature View → one owning ViewModel. Navigation is separate presentation state, scoped to the stack/window that uses it.** A navigation object is not a second feature ViewModel and is not a business-service dependency.
 
+**Check deployment targets first.** The typed `NavigationStack(path:)`, value-based `NavigationLink`, and `navigationDestination` examples below require iOS 16/macOS 13 or later. For an app supporting earlier versions, retain its compatible `NavigationView`/destination approach or use an availability-gated navigation container with equivalent routes and lifetimes. Keep each stack/window scoped the same way on both paths; do not raise the deployment target to adopt an example. See Apple's [navigation migration guidance](https://developer.apple.com/documentation/swiftui/migrating-to-new-navigation-types).
+
 ## Choose the smallest navigation mechanism
 
 | Need | Use |
 |---|---|
-| Simple link with no programmatic path control | `NavigationLink` and destination registration |
-| Programmatic navigation owned by one container | Local `@State` with a typed `[Route]` path |
+| Simple link with no programmatic path control | A compatible `NavigationLink` pattern for the deployment target |
+| Programmatic navigation owned by one container | Local `@State` with a typed `[Route]` path where NavigationStack is available; a compatible older-OS flow otherwise |
 | Several descendants need to manipulate the same stack | A scoped observable `NavigationManager<Route>` in environment |
 | Reusable button/row reports navigation intent | A focused action closure; parent handles navigation |
 | Independent tab, sheet flow, or window | Its own path/instance, even if it uses the same route type |
@@ -20,7 +22,7 @@ Navigation is presentation state. `NavigationManager<Route>` may remain under `M
 
 - Feature and composition Views may read the correctly scoped navigation object from SwiftUI environment and perform presentation-only path changes. This does not count as a second feature ViewModel.
 - Views and composition Views own routes, paths, and navigation decisions. ViewModels and UseCases do not depend on NavigationManager, expose navigation commands, accept navigation callbacks, or mutate paths.
-- For a simple presentation action, a View can use `NavigationLink(value:)`, change the path, or invoke a focused presentation closure directly. Do not route every navigation tap through a UseCase.
+- For a simple presentation action, a View can use a compatible `NavigationLink`, change a supported path, or invoke a focused presentation closure directly. Do not route every navigation tap through a UseCase.
 - When navigation depends on a business result, the ViewModel returns an operation outcome or exposes UI state. The View decides whether that outcome means dismissing, pushing a destination, or staying in place. Do not add route-specific intents to the ViewModel.
 - Reusable visual components receive values, bindings, and action closures, not the navigation object.
 
@@ -49,7 +51,7 @@ A scene/root composition View may own local navigation state using `@State` (or 
 
 ## Stack-scoped composition example
 
-This illustrative container receives existing feature ViewModels from app/scene composition and owns only its local presentation state. `ProfileViewModel`, `SettingsViewModel`, and their Views represent existing features.
+This iOS 16/macOS 13+ illustrative container receives existing feature ViewModels from app/scene composition and owns only its local presentation state. `ProfileViewModel`, `SettingsViewModel`, and their Views represent existing features. Its exact navigation APIs need a compatible branch for older deployment targets.
 
 ```swift
 import SwiftUI
@@ -85,7 +87,7 @@ Each feature receives one ViewModel. The container neither constructs services n
 
 ## Routes and destination registration
 
-- Prefer one `Hashable` route enum per stack with a `[Route]` path. Use `NavigationPath` when a heterogeneous path is actually needed.
+- Where NavigationStack is available, prefer one `Hashable` route enum per stack with a `[Route]` path. Use `NavigationPath` when a heterogeneous path is actually needed. On older systems, retain the same route ownership with supported navigation APIs.
 - Route payloads are stable identifiers or small value state. Do not embed ViewModels, services, closures, or mutable persistence objects.
 - Resolve destination data through the destination's owning ViewModel and UseCases. Handle deleted or unavailable identifiers with a deliberate unavailable state.
 - Register destinations within the owning stack's hierarchy, outside lazy row builders. Switch exhaustively over that stack's route enum.

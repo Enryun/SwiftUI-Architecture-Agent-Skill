@@ -95,7 +95,7 @@ UseCase/[Domain]/[Feature]/
 
 **Rules**
 
-- `@Observable` + `@MainActor`
+- `@MainActor` for UI state; use `@Observable` where SwiftUI Observation is available, or the app's compatible `ObservableObject` approach on older targets. See [observation and deployment targets](observation.md)
 - Use a nested `enum ViewState` when mutually exclusive screen modes benefit from it
 - Depends on focused UseCase protocols when business operations require them; no required primary UseCase
 - Never depends on managers or other ViewModels

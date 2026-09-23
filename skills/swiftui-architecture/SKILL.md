@@ -43,7 +43,7 @@ Closures support component actions, presentation events, and content composition
    - Runtime flow is `View → ViewModel → UseCase → Manager` when those layers are present; simple presentation-only features may stop at ViewModel.
    - `App` wires dependencies and owns shared lifetimes; factories create individual instances from supplied dependencies.
 2. **Protocol-first at boundaries:** Use protocols for replaceable infrastructure and business dependencies. A trivial private implementation does not need a protocol solely to satisfy this guide.
-3. **ViewModels** are `@MainActor` + `@Observable`; use a nested `ViewState` enum when mutually exclusive screen modes make it clearer. Independent state such as drafts, selection, sheets, and alerts may remain separate properties.
+3. **ViewModels** own UI state on `@MainActor`. Prefer `@Observable` when the app targets iOS 17/macOS 14 or later and its toolchain supports Observation; for earlier targets, use the app's compatible `ObservableObject` approach. Preserve existing observation conventions unless migration is requested. Use a nested `ViewState` enum when mutually exclusive screen modes make it clearer. Independent state such as drafts, selection, sheets, and alerts may remain separate properties. See [observation and deployment targets](references/observation.md).
 4. **ViewModels depend on focused UseCase protocols when business operations require them** — never managers or other ViewModels. Each UseCase depends directly on the narrow manager protocols it needs, never another UseCase.
 5. **Views have explicit roles** — each feature View receives exactly one owning feature ViewModel. Composition views may receive multiple child ViewModels to assemble independent features using instances supplied by `App`. Reusable visual components receive values, bindings, and action closures. Views do not call UseCases, perform business operations, or create business services. Scoped navigation state is a presentation exception: feature/composition Views may access it; ViewModels and UseCases may not. ViewModels expose operation results and UI state, not routes or navigation commands; Views decide how to navigate. See [navigation and lifetimes](references/navigation.md).
 6. **Factories create individual instances** — each method creates one Manager, UseCase, or ViewModel and accepts its dependencies as arguments. Start with one factory; split by domain or platform when current complexity warrants it. Names such as `Factory`, `AppFactory`, and `[Domain]Factory` are conventions, not architectural requirements. Platform implementation selection is allowed; business logic and hidden feature/application graphs are forbidden.
@@ -71,6 +71,8 @@ During review, flag comments that merely narrate obvious code and remove them on
 Treat domain, presentation, and persistence models as suggested responsibility categories, not a mandatory three-type structure. Reuse plain domain values across Managers, UseCases, ViewModels, and Views when their meaning matches. Separate persistence/transport/UI representations only when their requirements differ. Keep framework-managed records and contexts inside their owning integration; business-facing APIs expose domain values or identifiers. See [model ownership](references/models.md) for placement and conversion rules.
 
 ## Scaffold workflow
+
+Before choosing observation or navigation APIs, inspect the project's minimum OS versions and Swift toolchain. Preserve its supported targets; adapt examples rather than raising deployment targets to fit them.
 
 ### Phase 1 — Propose (no file creation)
 
@@ -105,6 +107,7 @@ Treat domain, presentation, and persistence models as suggested responsibility c
 - [ ] Manager — only if the feature needs infrastructure; use a protocol when replaceability/test seams matter
 - [ ] UseCases — only for focused business operations that need a separate boundary
 - [ ] ViewModel — `[Feature]ViewModel`; add `ViewState` when mutually exclusive modes benefit from it
+- [ ] ViewModel observation matches deployment target and existing conventions; injected ViewModel lifetime is explicit
 - [ ] View — `[Feature]View` receives one owning ViewModel; compose independent features without an aggregate ViewModel
 - [ ] DI wired in `App`; shared manager instances created once and reused
 
@@ -173,5 +176,6 @@ Read only what you need:
 - [Anti-patterns](references/anti-patterns.md)
 - [Navigation and dependency lifetimes](references/navigation.md)
 - [Concurrency](references/concurrency.md)
+- [Observation and deployment targets](references/observation.md)
 - For deep Swift 6 concurrency diagnostics and migration, use the companion [Swift Concurrency Agent Skill](https://github.com/AvdLee/Swift-Concurrency-Agent-Skill).
 - [End-to-end example](references/examples.md)

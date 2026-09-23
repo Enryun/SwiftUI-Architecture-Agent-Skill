@@ -45,7 +45,7 @@ Details: [Navigation and dependency lifetimes](skills/swiftui-architecture/refer
 | Check | Rule |
 |-------|------|
 | Isolation | `@MainActor` on ViewModels |
-| Observation | `@Observable` (Swift Observation) |
+| Observation | Match deployment target: `@Observable` for supported modern targets; compatible `ObservableObject` for older targets. Preserve existing conventions. |
 | State | Use a nested `ViewState` enum when mutually exclusive modes benefit from it; independent state may remain separate |
 | Dependencies | One or more focused UseCase protocols when needed; no other ViewModels |
 

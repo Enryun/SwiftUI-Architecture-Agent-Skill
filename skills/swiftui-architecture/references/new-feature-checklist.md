@@ -10,6 +10,7 @@ Use when adding `[Feature]` to an existing SwiftUI app.
 - [ ] Whether focused UseCases are needed, and each public API if they are
 - [ ] Whether a `ViewState` enum clarifies mutually exclusive modes
 - [ ] Navigation routes (if any)
+- [ ] Minimum OS versions, Swift toolchain, and existing ViewModel observation convention
 
 ## 2. Factory (optional)
 
@@ -40,7 +41,7 @@ Reuse an existing factory; add a creation method only when a new dependency must
 ## 5. ViewModel
 
 - [ ] `Pages/[Feature]/ViewModel/[Feature]ViewModel.swift`
-- [ ] `@Observable` + `@MainActor`
+- [ ] `@MainActor`; choose `@Observable` or compatible `ObservableObject` based on deployment target and existing convention ([observation guidance](observation.md))
 - [ ] Inject focused UseCase protocols when business operations require them; no managers or other ViewModels
 - [ ] Add `enum ViewState { ... }` when mutually exclusive modes benefit from it
 - [ ] Use `private(set)` for externally read state unless writable bindings are deliberate
@@ -69,6 +70,7 @@ Reuse an existing factory; add a creation method only when a new dependency must
 - [ ] Wire individual objects in `App` through factories
 - [ ] Create shared managers once in `App` and reuse those instances
 - [ ] Navigation: typed routes and one path per independent stack/window; local state or `NavigationManager<FeatureRoute>` as needed
+- [ ] Navigation APIs are available at the minimum OS, with a compatible older-OS flow when needed
 - [ ] Route payloads contain identifiers/values, not ViewModels or services
 - [ ] Navigation accessed only by presentation Views, never ViewModels/UseCases
 - [ ] Destination ViewModel identity and lifetime are explicit

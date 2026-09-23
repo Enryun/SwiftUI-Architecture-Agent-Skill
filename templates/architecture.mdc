@@ -42,7 +42,7 @@ Avoid obvious descriptive comments that repeat what names and code already say. 
 ## Additional rules
 
 - Use **protocol types** at replaceable dependency boundaries.
-- ViewModels: `@Observable`, `@MainActor`; use a nested `ViewState` when mutually exclusive modes benefit from it.
+- ViewModels: `@MainActor` UI state; choose `@Observable` only for supported deployment targets/toolchains, otherwise follow the app's compatible `ObservableObject` approach. Preserve existing conventions. Use a nested `ViewState` when mutually exclusive modes benefit from it.
 - Model categories and locations are guidance, not a mandatory three-type structure. Reuse plain domain values across layers. Separate storage/transport/UI models only when requirements differ; keep persistence records and contexts inside integrations and expose values or identifiers to business layers.
 
 ## New feature
